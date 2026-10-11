@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Registro de Jogos</title>
-<style>
+<style id="app-css">
 :root{--bg:#f4f6f9;--card:#fff;--tx:#1c2430;--mu:#667085;--bd:#e1e5eb;--pr:#1f6feb;--ok:#168a45;--ng:#d92d20;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--card:#18202a;--tx:#e8edf3;--mu:#97a3b3;--bd:#2a3441;--pr:#5b9dff;--ok:#3ecf7a;--ng:#ff6b60}}
@@ -45,6 +45,8 @@ nav span{display:block;font-size:20px}
 <body>
 <main>
 <h1>🎲 Registro de Jogos</h1>
+<div id="adbar" class="card hide"><div class="row"><div id="pst" class="mu"></div><button id="pub">Publicar</button><button id="out" class="sec">Sair</button></div><div class="msg" id="pm"></div></div>
+<div id="login" class="card hide"><h2>Acesso do administrador</h2><label>Código</label><input id="cd" type="password" inputmode="numeric" placeholder="Digite o código"><div class="msg" id="lm"></div><div class="row" style="margin-top:6px"><button id="lg">Entrar</button><button class="sec" id="lc">Voltar</button></div></div>
 
 <section id="t-rod">
   <div class="card">
@@ -84,9 +86,10 @@ nav span{display:block;font-size:20px}
   <div class="card">
     <h2>Ranking e acerto com a banca</h2>
     <div class="scroll"><table><thead><tr><th>#</th><th>Jogador</th><th>Rod.</th><th>Vit.</th><th>Saldo</th><th>A receber / pagar</th></tr></thead><tbody id="rk"></tbody><tfoot id="rf"></tfoot></table></div>
-    <div class="mu" style="margin-top:10px">Saldo positivo: recebe da banca. Saldo negativo: paga à banca. Desempate por número de vitórias.</div><h2 style="margin-top:20px">Análise geral</h2><div id="an"></div>
+    <div class="mu" style="margin-top:10px">Saldo positivo: recebe da banca. Saldo negativo: paga à banca. Desempate por número de vitórias.</div><div id="anw"><h2 style="margin-top:20px">Análise geral</h2><div id="an"></div></div>
   </div>
 </section>
+<div id="vlink" class="hide" style="text-align:center;margin-top:8px"><button class="sec" id="vl">🔒 Acesso do administrador</button></div>
 </main>
 
 <nav>
@@ -95,12 +98,32 @@ nav span{display:block;font-size:20px}
   <button data-t="t-rank"><span>🏆</span>Ranking</button>
 </nav>
 
-<script>
+<script id="seed" type="application/json">{"players":[],"rounds":[]}</script>
+<script id="app-js">
 const KEY="registro_jogos_v1";
 let S={players:[],rounds:[]};
-try{const x=localStorage.getItem(KEY);if(x)S=JSON.parse(x)}catch(e){}
+const MAIN0=document.querySelector("main").outerHTML,NAV0=document.querySelector("nav").outerHTML;
+const CODE="246810";
+const clone=o=>JSON.parse(JSON.stringify(o));
+let SEED={players:[],rounds:[]};
+try{SEED=JSON.parse(document.getElementById("seed").textContent)}catch(e){}
+let isAdm=false;
+try{isAdm=sessionStorage.getItem("adm")==="1"}catch(e){}
+const loadDraft=()=>{try{const x=localStorage.getItem(KEY);if(x)return JSON.parse(x)}catch(e){}return null};
+S=isAdm?(loadDraft()||clone(SEED)):clone(SEED);
+function pstat(){if(!isAdm)return;const d=JSON.stringify(S)!==JSON.stringify(SEED);$("pst").textContent=d?"Há alterações não publicadas para os visitantes.":"O ranking publicado está atualizado.";$("pub").disabled=!d}
+function applyMode(){
+  $("adbar").classList.toggle("hide",!isAdm);document.querySelector("nav").classList.toggle("hide",!isAdm);
+  $("vlink").classList.toggle("hide",isAdm);$("anw").classList.toggle("hide",!isAdm);$("login").classList.add("hide");
+  if(isAdm)show("t-rod");else{["t-rod","t-jog"].forEach(x=>$(x).classList.add("hide"));$("t-rank").classList.remove("hide");ranking()}
+  pstat();
+}
+function buildDoc(j){
+  const g=s=>{const e=document.querySelector(s);return e?e.outerHTML:""};
+  return '<!DOCTYPE html><html lang="pt-BR"><head>'+g("meta[charset]")+g("meta[name=viewport]")+g("title")+g("#app-css")+'</head><body>'+MAIN0+NAV0+'<scr'+'ipt id="seed" type="application/json">'+j+'</scr'+'ipt><scr'+'ipt id="app-js">'+document.getElementById("app-js").textContent+'</scr'+'ipt></body></html>';
+}
 const $=id=>document.getElementById(id);
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}pstat()};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -194,13 +217,31 @@ function ranking(){
   $("rf").innerHTML=st.length?`<tr><td></td><td colspan="2">Total a receber</td><td></td><td colspan="2" class="pos">${brl(rec)}</td></tr><tr><td></td><td colspan="2">Total a pagar</td><td></td><td colspan="2" class="neg">${brl(pag)}</td></tr>`:"";
 }
 
-$("be").onclick=async()=>{const t=JSON.stringify(S);$("bk").value=t;$("bk").select();let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{ok=document.execCommand("copy")}catch(e2){}}$("bm").style.color="var(--ok)";$("bm").textContent=ok?"Dados copiados! Cole em um lugar seguro.":"Selecione e copie o texto acima para guardar."};
-$("bi").onclick=()=>{try{const d=JSON.parse($("bk").value);if(!Array.isArray(d.players)||!Array.isArray(d.rounds))throw 0;
-  if(!confirm("Isso substitui os dados deste aparelho. Continuar?"))return;S=d;save();sel=new Set();win="";renderForm();hist();players();$("bm").style.color="var(--ok)";$("bm").textContent="Dados importados."}
+$("be").onclick=async()=>{const t=JSON.stringify(S);$("bk").value=t;$("bk").select();let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{ok=document.execCommand("copy")}catch(e2){}}$("bm").style.color="var(--ok)";$("bm").textContent=ok?"Copiado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas. Cole em um lugar seguro.":"Selecione e copie o texto acima ("+S.players.length+" jogadores e "+S.rounds.length+" rodadas)."};
+$("bi").onclick=()=>{try{const d=JSON.parse($("bk").value);if(!Array.isArray(d.players)||!Array.isArray(d.rounds)||!d.players.every(p=>p&&p.id&&p.name)||!d.rounds.every(r=>r&&r.id&&r.date&&r.entry>=0&&r.winner&&Array.isArray(r.parts)))throw 0;
+  if(!confirm("Importar "+d.players.length+" jogadores e "+d.rounds.length+" rodadas? Isso substitui todos os dados deste aparelho."))return;S=d;save();sel=new Set();win="";renderForm();hist();players();$("bm").style.color="var(--ok)";$("bm").textContent="Importado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas."}
   catch(e){$("bm").style.color="var(--ng)";$("bm").textContent="Texto inválido. Cole exatamente o que foi exportado."}};
 
 $("rd").value=new Date().toISOString().slice(0,10);
 renderForm();hist();players();
+$("vl").onclick=()=>{$("login").classList.remove("hide");$("vlink").classList.add("hide");$("cd").focus()};
+$("lc").onclick=()=>{$("login").classList.add("hide");$("vlink").classList.remove("hide");$("cd").value="";$("lm").textContent=""};
+$("lg").onclick=()=>{
+  if($("cd").value.trim()!==CODE){$("lm").textContent="Código incorreto.";return}
+  isAdm=true;try{sessionStorage.setItem("adm","1")}catch(e){}
+  S=loadDraft()||clone(SEED);sel=new Set();win="";$("cd").value="";$("lm").textContent="";renderForm();hist();players();applyMode();
+};
+$("cd").onkeydown=e=>{if(e.key==="Enter")$("lg").click()};
+$("out").onclick=()=>{isAdm=false;try{sessionStorage.removeItem("adm")}catch(e){}endEdit();sel=new Set();win="";S=clone(SEED);renderForm();hist();players();applyMode()};
+$("pub").onclick=async()=>{
+  const m=$("pm");m.style.color="var(--mu)";m.textContent="Publicando...";
+  try{
+    const art=window.claude?await window.claude.use("artifact"):null;
+    if(!art){m.style.color="var(--ng)";m.textContent="Publicar só funciona no link publicado, aberto pelo dono.";return}
+    await art.publish(buildDoc(JSON.stringify(S).replace(/</g,String.fromCharCode(92)+"u003c")));
+  }catch(e){m.style.color="var(--ng)";m.textContent=(e&&(e.code==="not_writer"||e.code==="not_granted"))?"Sem permissão para publicar: só o dono do link pode.":"Não foi possível publicar: "+((e&&e.message)||"erro")}
+};
+applyMode();
 </script>
 </body>
 </html>
