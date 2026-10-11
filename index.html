@@ -73,6 +73,7 @@ nav span{display:block;font-size:20px}
 .kr b{display:block}.kr .pd{margin-top:5px;font-size:14px;font-weight:600}
 .kh{display:flex;align-items:center;gap:10px;cursor:pointer}.kh .ar{width:16px;color:var(--mu)}.kh .in{flex:1;min-width:0}.kh .pd{margin-top:5px;font-size:14px;font-weight:600}
 .bdg{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid var(--bd);color:var(--mu);white-space:nowrap}.bdg.cl{color:var(--ok);border-color:var(--ok)}
+.row.wr{flex-wrap:wrap}.row.wr>button{flex:1 1 140px}
 .kb{margin-top:12px;border-top:1px solid var(--bd);padding-top:10px}
 </style>
 </head>
@@ -120,7 +121,7 @@ nav span{display:block;font-size:20px}
     <h2>Exportar / importar dados (JSON)</h2>
     <div class="mu" style="margin-bottom:8px">Os dados do sistema são sempre exportados e importados em JSON. Exportar baixa o arquivo .json e também copia o texto. Para importar, escolha o arquivo .json ou cole o JSON abaixo. Importar substitui todos os dados deste aparelho.</div>
     <textarea id="bk" rows="4" placeholder="Cole aqui o JSON exportado pelo sistema"></textarea>
-    <div class="row" style="margin-top:8px"><button class="sec" id="be">Exportar JSON</button><button class="sec" id="bi">Importar JSON colado</button><button class="sec" id="bfb">Importar arquivo .json</button><input type="file" id="bf" accept=".json,application/json" style="display:none"></div>
+    <div class="row wr" style="margin-top:8px"><button class="sec" id="be">Exportar JSON</button><button class="sec" id="bi">Importar JSON colado</button><button class="sec" id="bfb">Importar arquivo .json</button><input type="file" id="bf" accept=".json,application/json" style="display:none"></div>
     <div class="msg" id="bm"></div>
   </div>
 </section>
