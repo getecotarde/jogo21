@@ -40,6 +40,34 @@ nav button{flex:1;background:none;color:var(--mu);border-radius:10px;padding:10p
 nav button.on{color:var(--pr);background:color-mix(in srgb,var(--pr) 12%,transparent)}
 nav span{display:block;font-size:20px}
 .hide{display:none}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600}
+.pill.on{border-color:var(--pr);color:var(--pr);background:color-mix(in srgb,var(--pr) 14%,var(--bg))}
+.pod{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:8px 0 6px;padding:0 2px;border-bottom:3px solid var(--bd)}
+.pc{flex:1 1 0;max-width:200px;min-width:0;text-align:center}
+.pc .md{font-size:32px;line-height:1.1}
+.pc .lb{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);margin-top:2px}
+.pc .nm{font-weight:800;font-size:15px;margin:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc .sd{font-size:14px;font-weight:800}
+.pc .st{font-size:12px;color:var(--mu);margin-top:1px}
+.pc .bs{margin-top:10px;border-radius:12px 12px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-size:26px;font-weight:900;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.p1 .nm{font-size:17px}
+.p1 .bs{height:116px;background:linear-gradient(180deg,#f7c948,#d89a05);box-shadow:0 -6px 22px -8px rgba(247,201,72,.7)}
+.p2 .bs{height:84px;background:linear-gradient(180deg,#cfd6df,#8c97a6)}
+.p3 .bs{height:60px;background:linear-gradient(180deg,#dca36a,#a76a3a)}
+.p1 .lb{color:#c98a00}
+.tie{font-weight:600;letter-spacing:0;text-transform:none}
+.rr{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--bd)}
+.rr:last-child{border:0}
+.rr .no{width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:none}
+.rr .in{flex:1;min-width:0}
+.rr .in b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rr .bar{height:5px;border-radius:3px;background:var(--bd);margin-top:6px;overflow:hidden}
+.rr .bar i{display:block;height:100%;border-radius:3px;background:var(--pr)}
+.rr .vl{text-align:right;flex:none;font-weight:800}
+.rr .vl small{display:block;font-weight:500;color:var(--mu);font-size:12px}
+@media (max-width:380px){.pc .md{font-size:26px}.pc .nm{font-size:13px}.p1 .nm{font-size:15px}}
 </style>
 </head>
 <body>
@@ -84,10 +112,27 @@ nav span{display:block;font-size:20px}
 
 <section id="t-rank" class="hide">
   <div class="card">
-    <h2>Ranking e acerto com a banca</h2>
-    <div class="scroll"><table><thead><tr><th>#</th><th>Jogador</th><th>Rod.</th><th>Vit.</th><th>Saldo</th><th>A receber / pagar</th></tr></thead><tbody id="rk"></tbody><tfoot id="rf"></tfoot></table></div>
-    <div class="mu" style="margin-top:10px">Saldo positivo: recebe da banca. Saldo negativo: paga à banca. Desempate por número de vitórias.</div><div id="anw"><h2 style="margin-top:20px">Análise geral</h2><div id="an"></div></div>
+    <h2>📅 Período do ranking</h2>
+    <div class="pills" id="pc"></div>
+    <div class="row" style="margin-top:6px"><div><label>De</label><input type="date" id="pf"></div><div><label>Até</label><input type="date" id="pt"></div></div>
+    <label>Ou escolha o dia de um jogo</label>
+    <select id="pd"></select>
+    <div class="mu" id="pi" style="margin-top:8px"></div>
+    <label>Baixar relatório do período escolhido</label>
+    <div class="row"><button class="sec" id="xx" type="button" style="flex:1 1 0">📊 Excel</button><button class="sec" id="xp" type="button" style="flex:1 1 0">📄 PDF</button></div>
+    <div class="msg" id="xm" style="color:var(--mu)"></div>
   </div>
+  <div class="card">
+    <h2>🏆 Ranking</h2>
+    <div id="pod"></div>
+    <div id="rkl"></div>
+  </div>
+  <div class="card">
+    <h2>Acerto com a banca</h2>
+    <div class="scroll"><table><thead><tr><th>#</th><th>Jogador</th><th>Rod.</th><th>Vit.</th><th>Saldo</th><th>A receber / pagar</th></tr></thead><tbody id="rk"></tbody><tfoot id="rf"></tfoot></table></div>
+    <div class="mu" style="margin-top:10px">Saldo positivo: recebe da banca. Saldo negativo: paga à banca. Desempate por número de vitórias.</div>
+  </div>
+  <div class="card" id="anw"><h2>Análise geral</h2><div id="an"></div></div>
 </section>
 <div id="vlink" class="hide" style="text-align:center;margin-top:8px"><button class="sec" id="vl">🔒 Acesso do administrador</button></div>
 </main>
@@ -191,31 +236,197 @@ $("qa").onclick=()=>{const n=$("qn").value.trim(),m=$("rm");if(!n)return;
   const p={id:uid(),name:n};S.players.push(p);save();sel.add(p.id);$("qn").value="";m.textContent="";renderForm();players()};
 $("qn").onkeydown=e=>{if(e.key==="Enter")$("qa").click()};
 
+let fF="",fT="";
+const inR=r=>(!fF||r.date>=fF)&&(!fT||r.date<=fT);
+function setPeriod(x,y){fF=x||"";fT=y||"";if(fF&&fT&&fF>fT){const t=fF;fF=fT;fT=t}ranking();analise()}
 function analise(){
-  const st=S.players.map(p=>({id:p.id,n:p.name,g:0,v:0,e:0,w:0,mx:0}));
-  const by=Object.fromEntries(st.map(x=>[x.id,x]));
-  let part=0,mov=0;
-  S.rounds.forEach(r=>{const n=r.parts.length,pot=r.entry*n;mov+=pot;part+=n;
+  const st0=S.players.map(p=>({id:p.id,n:p.name,g:0,v:0,e:0,w:0,mx:0}));
+  const by=Object.fromEntries(st0.map(x=>[x.id,x]));
+  let part=0,mov=0;const rs=S.rounds.filter(inR);
+  rs.forEach(r=>{const n=r.parts.length,pot=r.entry*n;mov+=pot;part+=n;
     r.parts.forEach(id=>{const x=by[id];if(!x)return;x.g++;x.e+=r.entry});
     const w=by[r.winner];if(w){w.v++;w.w+=pot;w.mx=Math.max(w.mx,r.entry*(n-1))}});
+  const st=st0.filter(x=>x.g>0);
   st.sort((a,b)=>(b.w-b.e)-(a.w-a.e)||b.v-a.v);
-  const nr=S.rounds.length,box=(t,v)=>`<div style="flex:1 1 45%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px"><div class="mu">${t}</div><b>${v}</b></div>`;
+  const nr=rs.length,box=(t,v)=>`<div style="flex:1 1 45%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px"><div class="mu">${t}</div><b>${v}</b></div>`;
   $("an").innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${box("Rodadas",nr)}${box("Total movimentado",brl(mov))}${box("Participações",part)}${box("Média de jogadores",nr?(part/nr).toFixed(1).replace(".",","):"0")}</div>`+
   `<div class="scroll"><table><thead><tr><th>#</th><th>Jogador</th><th>Jogos</th><th>Vit.</th><th>Derr.</th><th>% vit.</th><th>Apostado</th><th>Ganho</th><th>Maior ganho</th><th>Saldo</th></tr></thead><tbody>`+
   (st.length?st.map((x,i)=>{const s=Math.round((x.w-x.e)*100)/100,c=s>0?"pos":s<0?"neg":"";
-    return `<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${x.g}</td><td>${x.v}</td><td>${x.g-x.v}</td><td>${x.g?Math.round(x.v/x.g*100):0}%</td><td>${brl(x.e)}</td><td>${brl(x.w)}</td><td>${brl(x.mx)}</td><td class="${c}">${brl(s)}</td></tr>`}).join(""):'<tr><td colspan="10" class="mu">Sem dados ainda.</td></tr>')+
+    return `<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${x.g}</td><td>${x.v}</td><td>${x.g-x.v}</td><td>${x.g?Math.round(x.v/x.g*100):0}%</td><td>${brl(x.e)}</td><td>${brl(x.w)}</td><td>${brl(x.mx)}</td><td class="${c}">${brl(s)}</td></tr>`}).join(""):'<tr><td colspan="10" class="mu">Sem dados no período.</td></tr>')+
   `</tbody></table></div><div class="mu" style="margin-top:8px">Jogos = rodadas em que participou. Derrotas = jogos sem vitória. Apostado = soma das entradas. Ganho = soma dos potes vencidos.</div>`;
 }
-function ranking(){
+function calcP(){
+  const rs=S.rounds.filter(inR);
   const st=S.players.map(p=>({p,g:0,v:0,s:0}));
   const by=Object.fromEntries(st.map(x=>[x.p.id,x]));
-  S.rounds.forEach(r=>{const n=r.parts.length;r.parts.forEach(id=>{if(!by[id])return;by[id].g++;by[id].s+=(id===r.winner)?r.entry*(n-1):-r.entry});if(by[r.winner])by[r.winner].v++});
-  st.sort((a,b)=>b.s-a.s||b.v-a.v||a.p.name.localeCompare(b.p.name));
-  $("rk").innerHTML=st.length?st.map((x,i)=>{const s=Math.round(x.s*100)/100,c=s>0?"pos":s<0?"neg":"";
-    return `<tr><td>${i+1}</td><td>${esc(x.p.name)}</td><td>${x.g}</td><td>${x.v}</td><td class="${c}">${brl(s)}</td><td class="${c}">${s>0?"Receber "+brl(s):s<0?"Pagar "+brl(-s):"Quite "+brl(0)}</td></tr>`}).join(""):'<tr><td colspan="6" class="mu">Sem dados ainda.</td></tr>';
-  const rec=st.reduce((a,x)=>a+Math.max(x.s,0),0),pag=st.reduce((a,x)=>a+Math.max(-x.s,0),0);
-  $("rf").innerHTML=st.length?`<tr><td></td><td colspan="2">Total a receber</td><td></td><td colspan="2" class="pos">${brl(rec)}</td></tr><tr><td></td><td colspan="2">Total a pagar</td><td></td><td colspan="2" class="neg">${brl(pag)}</td></tr>`:"";
+  rs.forEach(r=>{const n=r.parts.length;r.parts.forEach(id=>{if(!by[id])return;by[id].g++;by[id].s+=(id===r.winner)?r.entry*(n-1):-r.entry});if(by[r.winner])by[r.winner].v++});
+  const L=st.filter(x=>x.g>0);
+  L.forEach(x=>x.s=Math.round(x.s*100)/100);
+  L.sort((a,b)=>b.s-a.s||b.v-a.v||a.p.name.localeCompare(b.p.name));
+  const pl=[];L.forEach((x,i)=>{pl[i]=(i>0&&x.s===L[i-1].s&&x.v===L[i-1].v)?pl[i-1]:i+1});
+  return{rs,L,pl}}
+function ranking(){
+  const ds=[...new Set(S.rounds.map(r=>r.date))].sort();
+  const mn=ds[0]||"",mx=ds[ds.length-1]||"";
+  // controles de período
+  $("pf").min=$("pt").min=mn;$("pf").max=$("pt").max=mx;$("pf").value=fF;$("pt").value=fT;
+  const pills=[["Tudo","",""]];
+  [...new Set(ds.map(d=>d.slice(0,4)))].forEach(y=>pills.push([y,y+"-01-01",y+"-12-31"]));
+  if(ds.length){const t=new Date(mx+"T00:00:00Z");t.setUTCDate(t.getUTCDate()-29);pills.push(["Últimos 30 dias",t.toISOString().slice(0,10),mx])}
+  $("pc").innerHTML=pills.map(p=>`<button type="button" class="pill${fF===p[1]&&fT===p[2]?" on":""}" data-a="${p[1]}" data-b="${p[2]}">${p[0]}</button>`).join("");
+  const cnt={};S.rounds.forEach(r=>cnt[r.date]=(cnt[r.date]||0)+1);
+  $("pd").innerHTML='<option value="">Escolher dia do jogo…</option>'+[...ds].reverse().map(d=>`<option value="${d}"${fF===d&&fT===d?" selected":""}>${fd(d)} · ${cnt[d]} rod.</option>`).join("");
+  const {rs,L,pl}=calcP();
+  const tie=i=>(i>0&&pl[i]===pl[i-1])||(i<L.length-1&&pl[i]===pl[i+1]);
+  const dr=rs.map(r=>r.date).sort();
+  $("pi").textContent=rs.length?`${rs.length} ${rs.length===1?"rodada":"rodadas"} no período · ${fd(dr[0])}${dr[0]!==dr[dr.length-1]?" a "+fd(dr[dr.length-1]):""}`:"Nenhuma rodada neste período.";
+  // pódio
+  const LB={1:"Campeão",2:"Vice-campeão",3:"3º colocado"},MD={1:"🥇",2:"🥈",3:"🥉"};
+  const top=L.slice(0,3).map((x,i)=>({x,i}));
+  const order=top.length===3?[top[1],top[0],top[2]]:top.length===2?[top[1],top[0]]:top;
+  $("pod").innerHTML=top.length?`<div class="pod">`+order.map(({x,i})=>{const k=pl[i],c=x.s>0?"pos":x.s<0?"neg":"";
+    return `<div class="pc p${k}"><div class="md">${k===1?"👑":""}${MD[k]}</div><div class="lb">${LB[k]}${tie(i)?' <span class="tie">(empate)</span>':""}</div><div class="nm">${esc(x.p.name)}</div><div class="sd ${c}">${brl(x.s)}</div><div class="st">${x.v} ${x.v===1?"vitória":"vitórias"} · ${x.g} rod.</div><div class="bs">${k}º</div></div>`}).join("")+`</div>`:'<div class="mu" style="padding:14px 0">Nenhum jogo neste período.</div>';
+  // demais colocações
+  $("rkl").innerHTML=L.slice(3).map((x,j)=>{const i=j+3,c=x.s>0?"pos":x.s<0?"neg":"",pc=x.g?Math.round(x.v/x.g*100):0;
+    return `<div class="rr"><div class="no">${pl[i]}º</div><div class="in"><b>${esc(x.p.name)}</b><div class="mu">${x.v} ${x.v===1?"vitória":"vitórias"} em ${x.g} rod. · ${pc}%${tie(i)?" · empate":""}</div><div class="bar"><i style="width:${pc}%"></i></div></div><div class="vl ${c}">${brl(x.s)}<small>${x.s>0?"a receber":x.s<0?"a pagar":"quite"}</small></div></div>`}).join("");
+  // acerto com a banca
+  $("rk").innerHTML=L.length?L.map((x,i)=>{const s=x.s,c=s>0?"pos":s<0?"neg":"";
+    return `<tr><td>${pl[i]}</td><td>${esc(x.p.name)}</td><td>${x.g}</td><td>${x.v}</td><td class="${c}">${brl(s)}</td><td class="${c}">${s>0?"Receber "+brl(s):s<0?"Pagar "+brl(-s):"Quite "+brl(0)}</td></tr>`}).join(""):'<tr><td colspan="6" class="mu">Sem dados no período.</td></tr>';
+  const rec=L.reduce((a,x)=>a+Math.max(x.s,0),0),pag=L.reduce((a,x)=>a+Math.max(-x.s,0),0);
+  $("rf").innerHTML=L.length?`<tr><td></td><td colspan="2">Total a receber</td><td></td><td colspan="2" class="pos">${brl(rec)}</td></tr><tr><td></td><td colspan="2">Total a pagar</td><td></td><td colspan="2" class="neg">${brl(pag)}</td></tr>`:"";
 }
+
+/* ===== Exportar relatório (Excel .xlsx e PDF), sem bibliotecas ===== */
+const CRC=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+const U8=t=>new TextEncoder().encode(t);
+function zipStore(files){
+  const u16=v=>[v&255,v>>8&255],u32=v=>[v&255,v>>8&255,v>>16&255,v>>24&255];
+  const parts=[],cd=[];let off=0;
+  files.forEach(([n,t])=>{const nb=U8(n),d=U8(t),c=crc32(d);
+    const h=[...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(c),...u32(d.length),...u32(d.length),...u16(nb.length),...u16(0)];
+    parts.push(new Uint8Array(h),nb,d);
+    cd.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(c),...u32(d.length),...u32(d.length),...u16(nb.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off),...nb]));
+    off+=h.length+nb.length+d.length});
+  const cs=cd.reduce((a,x)=>a+x.length,0);
+  const e=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cs),...u32(off),...u16(0)]);
+  const all=[...parts,...cd,e],out=new Uint8Array(all.reduce((a,x)=>a+x.length,0));let p=0;all.forEach(x=>{out.set(x,p);p+=x.length});return out}
+const xe=t=>String(t).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function sheetXml(rows,widths){
+  let x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>'+widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")+'</cols><sheetData>';
+  rows.forEach((row,ri)=>{x+=`<row r="${ri+1}">`;row.forEach((c,ci)=>{if(c==null||c==="")return;const o=(typeof c==="object")?c:{v:c},ref=String.fromCharCode(65+ci)+(ri+1),st=o.s?` s="${o.s}"`:"";
+    x+=typeof o.v==="number"?`<c r="${ref}"${st}><v>${o.v}</v></c>`:`<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xe(o.v)}</t></is></c>`});x+='</row>'});
+  return x+'</sheetData></worksheet>'}
+function buildXlsx(R){
+  const H=t=>({v:t,s:1}),M=v=>({v,s:2});
+  const r1=[[{v:"Ranking dos jogos",s:4}],["Período: "+R.per],["Rodadas no período: "+R.rs.length],[],
+    [H("Pos."),H("Jogador"),H("Rodadas"),H("Vitórias"),H("Saldo (R$)"),H("Situação")]];
+  R.L.forEach((x,i)=>r1.push([R.pl[i],x.p.name,x.g,x.v,M(x.s),x.s>0?"Receber":x.s<0?"Pagar":"Quite"]));
+  r1.push([],["","Total a receber","","",{v:R.rec,s:5}],["","Total a pagar","","",{v:R.pag,s:5}]);
+  const sheets=[["Ranking",sheetXml(r1,[7,24,10,10,14,12])]];
+  if(R.det){
+    const r2=[[H("Rodada"),H("Data"),H("Entrada (R$)"),H("Participantes"),H("Jogadores"),H("Vencedor"),H("Ganho do vencedor (R$)")]];
+    R.rs.forEach(r=>{const n=r.parts.length,[y,m,d]=r.date.split("-").map(Number);
+      r2.push([S.rounds.indexOf(r)+1,{v:Math.round((Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/864e5),s:3},M(r.entry),n,r.parts.map(nm).join(", "),nm(r.winner),M(r.entry*(n-1))])});
+    sheets.push(["Rodadas",sheetXml(r2,[9,12,13,14,60,16,22])])}
+  const ns='xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"',hd='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const files=[
+   ["[Content_Types].xml",hd+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")+'</Types>'],
+   ["_rels/.rels",hd+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+   ["xl/workbook.xml",hd+`<workbook ${ns} xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>`+sheets.map((sh,i)=>`<sheet name="${sh[0]}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join("")+'</sheets></workbook>'],
+   ["xl/_rels/workbook.xml.rels",hd+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((_,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join("")+`<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+   ["xl/styles.xml",hd+`<styleSheet ${ns}><numFmts count="2"><numFmt numFmtId="164" formatCode="&quot;R$&quot; #,##0.00;[Red]-&quot;R$&quot; #,##0.00"/><numFmt numFmtId="165" formatCode="dd/mm/yyyy"/></numFmts><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDCE6F5"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`]];
+  sheets.forEach((sh,i)=>files.push([`xl/worksheets/sheet${i+1}.xml`,sh[1]]));
+  return zipStore(files)}
+
+const HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+const base=ch=>ch.normalize("NFD")[0];
+const pw=(t,z,b)=>{let w=0;for(const ch of String(t)){const c=base(ch).charCodeAt(0);w+=(c>=32&&c<=126?HW[c-32]:556)}return w*z/1000*(b?1.07:1)};
+const lat=t=>{let o="";for(const ch of String(t)){const c=ch.charCodeAt(0);if(c<256)o+=ch;else{const b=base(ch);o+=b.charCodeAt(0)<256?b:"?"}}return o};
+const pe=t=>lat(t).replace(/[\\()]/g,"\\$&").replace(/[\r\n]/g," ");
+const cut=(t,z,mw,b)=>{t=String(t);if(pw(t,z,b)<=mw)return t;while(t.length>1&&pw(t+"...",z,b)>mw)t=t.slice(0,-1);return t+"..."};
+const wrapT=(t,z,mw)=>{const out=[];let cur="";String(t).split(" ").forEach(w=>{const n=cur?cur+" "+w:w;if(pw(n,z)>mw&&cur){out.push(cur);cur=w}else cur=n});if(cur)out.push(cur);return out};
+const cm=t=>String(t).replace(/\u00a0/g," ");
+function buildPdf(R){
+  const W=595,H=842,M=40,pages=[];let cur,y;
+  const np=()=>{cur=[];pages.push(cur);y=H-M};
+  const GR="0.09 0.54 0.27 rg",RD="0.85 0.18 0.13 rg",GY="0.4 0.45 0.5 rg",BK="0 g";
+  const tx=(x,yy,t,z,b,c)=>cur.push(`${c||BK} BT /F${b?2:1} ${z} Tf ${x.toFixed(2)} ${yy.toFixed(2)} Td (${pe(t)}) Tj ET`);
+  const txr=(xr,yy,t,z,b,c)=>tx(xr-pw(t,z,b),yy,t,z,b,c);
+  const bar=(yy,h)=>cur.push(`0.86 0.90 0.96 rg ${M} ${yy} ${W-2*M} ${h} re f`);
+  const hl=yy=>cur.push(`0.88 0.9 0.93 RG 0.5 w ${M} ${yy} m ${W-M} ${yy} l S`);
+  const need=h=>{if(y-h<M+24)np()};
+  np();
+  tx(M,y-18,"Ranking dos jogos",20,1);y-=30;
+  tx(M,y-2,cm("Período: "+R.per+"  ·  "+R.rs.length+(R.rs.length===1?" rodada":" rodadas")),10,0,GY);y-=14;
+  tx(M,y-2,"Gerado em "+fd(new Date().toISOString().slice(0,10)),9,0,GY);y-=22;
+  const LB={1:"Campeão",2:"Vice-campeão",3:"3º colocado"};
+  R.L.slice(0,3).forEach((x,i)=>{const k=R.pl[i];tx(M,y-2,LB[k]+(R.tie(i)?" (empate)":"")+":",11,1);tx(M+110,y-2,x.p.name+"  ("+cm(brl(x.s))+")",11,k===1);y-=16});
+  y-=8;
+  const th1=()=>{bar(y-14,18);tx(M+6,y-9,"Pos.",9,1);tx(M+44,y-9,"Jogador",9,1);txr(335,y-9,"Rod.",9,1);txr(385,y-9,"Vit.",9,1);txr(455,y-9,"Saldo",9,1);txr(W-M-6,y-9,"Acerto",9,1);y-=22};
+  th1();
+  R.L.forEach((x,i)=>{if(y-18<M+24){np();th1()}
+    const c=x.s>0?GR:x.s<0?RD:BK;
+    tx(M+6,y-9,R.pl[i]+"º",10,i<3);tx(M+44,y-9,cut(x.p.name,10,215,i<3),10,i<3);txr(335,y-9,String(x.g),10);txr(385,y-9,String(x.v),10);
+    txr(455,y-9,cm(brl(x.s)),10,1,c);txr(W-M-6,y-9,x.s>0?"Receber "+cm(brl(x.s)):x.s<0?"Pagar "+cm(brl(-x.s)):"Quite",10,0,c);hl(y-14);y-=18});
+  y-=6;need(40);
+  tx(M+44,y-9,"Total a receber",10,1);txr(W-M-6,y-9,cm(brl(R.rec)),10,1,GR);y-=16;
+  tx(M+44,y-9,"Total a pagar",10,1);txr(W-M-6,y-9,cm(brl(R.pag)),10,1,RD);y-=24;
+  if(R.det&&R.rs.length){
+    need(60);tx(M,y-12,"Rodadas do período",13,1);y-=26;
+    const th2=()=>{bar(y-14,18);tx(M+6,y-9,"Rod.",9,1);tx(M+46,y-9,"Data",9,1);txr(190,y-9,"Entrada",9,1);txr(245,y-9,"Part.",9,1);tx(262,y-9,"Vencedor",9,1);txr(W-M-6,y-9,"Ganho",9,1);y-=22};
+    th2();
+    R.rs.forEach(r=>{const n=r.parts.length,ls=wrapT("Jogadores: "+r.parts.map(nm).join(", "),8,W-2*M-50).slice(0,3),h=17+ls.length*11;
+      if(y-h<M+24){np();th2()}
+      tx(M+6,y-9,String(S.rounds.indexOf(r)+1),10);tx(M+46,y-9,fd(r.date),10);txr(190,y-9,cm(brl(r.entry)),10);txr(245,y-9,String(n),10);
+      tx(262,y-9,cut(nm(r.winner),10,170,1),10,1);txr(W-M-6,y-9,cm(brl(r.entry*(n-1))),10,1,GR);
+      ls.forEach((l,j)=>tx(M+46,y-20-j*11,l,8,0,GY));hl(y-h+4);y-=h})}
+  const N=pages.length;
+  pages.forEach((p,i)=>{cur=p;tx(M,22,"Registro de Jogos",8,0,GY);const t="Página "+(i+1)+" de "+N;txr(W-M,22,t,8,0,GY)});
+  const objs=[];objs[1]="<</Type/Catalog/Pages 2 0 R>>";
+  objs[2]=`<</Type/Pages/Kids[${pages.map((_,i)=>(5+2*i)+" 0 R").join(" ")}]/Count ${N}>>`;
+  objs[3]="<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>";
+  objs[4]="<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>";
+  pages.forEach((p,i)=>{const c=p.join("\n");objs[5+2*i]=`<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${W} ${H}]/Resources<</Font<</F1 3 0 R/F2 4 0 R>>>>/Contents ${6+2*i} 0 R>>`;objs[6+2*i]=`<</Length ${c.length}>>\nstream\n${c}\nendstream`});
+  let out="%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n";const offs=[];
+  for(let i=1;i<objs.length;i++){offs[i]=out.length;out+=`${i} 0 obj\n${objs[i]}\nendobj\n`}
+  const xr=out.length;out+=`xref\n0 ${objs.length}\n0000000000 65535 f \n`+offs.slice(1).map(o=>String(o).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<</Size ${objs.length}/Root 1 0 R>>\nstartxref\n${xr}\n%%EOF`;
+  const u=new Uint8Array(out.length);for(let i=0;i<out.length;i++)u[i]=out.charCodeAt(i)&255;return u}
+
+function relat(){
+  const {rs,L,pl}=calcP();
+  const tie=i=>(i>0&&pl[i]===pl[i-1])||(i<L.length-1&&pl[i]===pl[i+1]);
+  const ds=rs.map(r=>r.date).sort(),a=ds[0],b=ds[ds.length-1];
+  const per=!rs.length?"":(a===b?fd(a):fd(a)+" a "+fd(b));
+  const nome=!rs.length?"":(a===b?"ranking_"+a:"ranking_"+a+"_a_"+b);
+  return{rs,L,pl,tie,per,nome,det:isAdm,
+    rec:L.reduce((t,x)=>t+Math.max(x.s,0),0),pag:L.reduce((t,x)=>t+Math.max(-x.s,0),0)}}
+let lastUrl="";
+async function entregar(bytes,nome,mime){
+  const m=$("xm"),blob=new Blob([bytes],{type:mime});
+  if(lastUrl)try{URL.revokeObjectURL(lastUrl)}catch(e){}
+  lastUrl=URL.createObjectURL(blob);
+  m.style.color="var(--ok)";
+  m.innerHTML="Arquivo gerado. Se o download não começar, toque em: <a href=\""+lastUrl+"\" download=\""+nome+"\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--pr);font-weight:600\">"+esc(nome)+"</a>";
+  try{
+    const f=new File([blob],nome,{type:mime});
+    if(/Android|iPhone|iPad/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:nome});return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  const a=document.createElement("a");a.href=lastUrl;a.download=nome;document.body.appendChild(a);a.click();a.remove()}
+function exportar(tipo){
+  const m=$("xm");
+  try{
+    const R=relat();
+    if(!R.rs.length){m.style.color="var(--ng)";m.textContent="Nenhuma rodada no período escolhido para exportar.";return}
+    if(tipo==="x")entregar(buildXlsx(R),R.nome+".xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    else entregar(buildPdf(R),R.nome+".pdf","application/pdf")
+  }catch(e){m.style.color="var(--ng)";m.textContent="Não foi possível gerar o arquivo: "+((e&&e.message)||"erro")}}
+$("xx").onclick=()=>exportar("x");
+$("xp").onclick=()=>exportar("p");
+$("pc").onclick=e=>{const b=e.target.closest("button");if(b)setPeriod(b.dataset.a,b.dataset.b)};
+$("pf").onchange=()=>{const v=$("pf").value;setPeriod(v,fT&&v>fT?v:fT)};
+$("pt").onchange=()=>{const v=$("pt").value;setPeriod(fF&&v&&v<fF?v:fF,v)};
+$("pd").onchange=()=>{const v=$("pd").value;if(v)setPeriod(v,v)};
 
 $("be").onclick=async()=>{const t=JSON.stringify(S);$("bk").value=t;$("bk").select();let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{ok=document.execCommand("copy")}catch(e2){}}$("bm").style.color="var(--ok)";$("bm").textContent=ok?"Copiado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas. Cole em um lugar seguro.":"Selecione e copie o texto acima ("+S.players.length+" jogadores e "+S.rounds.length+" rodadas)."};
 function parseImport(raw){
@@ -257,7 +468,7 @@ function doImport(text){
   try{
     const d=parseImport(text);
     if(!confirm("Importar "+d.players.length+" jogadores e "+d.rounds.length+" rodadas? Isso substitui todos os dados deste aparelho."))return;
-    S=d;save();sel=new Set();win="";edit=null;renderForm();hist();players();
+    S=d;fF="";fT="";save();sel=new Set();win="";edit=null;renderForm();hist();players();
     bm.style.color="var(--ok)";bm.textContent="Importado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas."
   }catch(e){bm.style.color="var(--ng)";bm.textContent=(e&&e.message)||"Texto inválido."}}
 $("bi").onclick=()=>doImport($("bk").value);
