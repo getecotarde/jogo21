@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro de Jogos</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--tx:#1c2430;--mu:#667085;--bd:#e1e5eb;--pr:#1f6feb;--ok:#168a45;--ng:#d92d20;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--card:#18202a;--tx:#e8edf3;--mu:#97a3b3;--bd:#2a3441;--pr:#5b9dff;--ok:#3ecf7a;--ng:#ff6b60}}
+:root[data-theme="dark"]{--bg:#0f141b;--card:#18202a;--tx:#e8edf3;--mu:#97a3b3;--bd:#2a3441;--pr:#5b9dff;--ok:#3ecf7a;--ng:#ff6b60}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:640px;margin:0 auto;padding:14px 14px 90px}
+h1{font-size:20px;margin:4px 0 12px}
+h2{font-size:16px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--mu);margin:8px 0 4px}
+input,select,textarea{width:100%;padding:11px;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px}
+button{font:inherit;padding:11px 16px;border-radius:10px;border:0;background:var(--pr);color:#fff;font-weight:600;cursor:pointer}
+button.sec{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+button.del{background:none;color:var(--ng);padding:4px 8px;font-size:20px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.row>button{flex:0 0 auto}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chip{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:999px;background:var(--bg);cursor:pointer;user-select:none}
+.chip input{width:auto;margin:0}.chip.on{border-color:var(--pr);background:color-mix(in srgb,var(--pr) 15%,var(--bg))}
+.li{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)}
+.li:last-child{border:0}.mu{color:var(--mu);font-size:13px}
+.pos{color:var(--ok);font-weight:700}.neg{color:var(--ng);font-weight:700}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 6px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+th:nth-child(1),td:nth-child(1),th:nth-child(2),td:nth-child(2){text-align:left}
+th{color:var(--mu);font-weight:600;font-size:12px}
+tfoot td{font-weight:700;border:0}
+.msg{font-size:13px;margin-top:8px;min-height:18px;color:var(--ng)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;background:none;color:var(--mu);border-radius:10px;padding:10px 4px;font-size:13px}
+nav button.on{color:var(--pr);background:color-mix(in srgb,var(--pr) 12%,transparent)}
+nav span{display:block;font-size:20px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>🎲 Registro de Jogos</h1>
+
+<section id="t-rod">
+  <div class="card">
+    <h2 id="rt">Nova rodada</h2>
+    <div class="row"><div><label>Data</label><input type="date" id="rd"></div>
+    <div><label>Entrada por jogador (R$)</label><input type="number" id="re" min="0" step="0.01" inputmode="decimal" value="0.50" placeholder="0,50"></div></div>
+    <label>Quem jogou (toque para marcar)</label>
+    <div class="chips" id="rp"></div>
+    <div class="row" style="margin-top:8px"><input id="qn" placeholder="Novo jogador" maxlength="30"><button class="sec" id="qa" type="button">+ Adicionar</button></div>
+    <label>Vencedor</label>
+    <select id="rw"></select>
+    <div id="prev" class="mu" style="margin-top:8px"></div>
+    <div class="msg" id="rm"></div>
+    <button id="rs" style="width:100%;margin-top:6px">Salvar rodada</button>
+    <button id="rc" class="sec hide" style="width:100%;margin-top:8px">Cancelar edição</button>
+  </div>
+  <div class="card"><h2>Histórico</h2><div id="rl"></div></div>
+</section>
+
+<section id="t-jog" class="hide">
+  <div class="card">
+    <h2>Jogadores</h2>
+    <div class="row"><input id="jn" placeholder="Nome do jogador" maxlength="30"><button id="ja">Adicionar</button></div>
+    <div class="msg" id="jm"></div>
+    <div id="jl"></div>
+  </div>
+  <div class="card">
+    <h2>Exportar / importar dados</h2>
+    <div class="mu" style="margin-bottom:8px">Os dados ficam salvos neste aparelho. Toque em Exportar para copiar tudo e guarde o texto (notas, e-mail ou mensagem para você mesmo). Em outro aparelho, cole o texto aqui e toque em Importar.</div>
+    <textarea id="bk" rows="4" placeholder="Cole aqui os dados exportados para importar"></textarea>
+    <div class="row" style="margin-top:8px"><button class="sec" id="be">Exportar dados</button><button class="sec" id="bi">Importar dados</button></div>
+    <div class="msg" id="bm"></div>
+  </div>
+</section>
+
+<section id="t-rank" class="hide">
+  <div class="card">
+    <h2>Ranking e acerto com a banca</h2>
+    <div class="scroll"><table><thead><tr><th>#</th><th>Jogador</th><th>Rod.</th><th>Vit.</th><th>Saldo</th><th>A receber / pagar</th></tr></thead><tbody id="rk"></tbody><tfoot id="rf"></tfoot></table></div>
+    <div class="mu" style="margin-top:10px">Saldo positivo: recebe da banca. Saldo negativo: paga à banca. Desempate por número de vitórias.</div><h2 style="margin-top:20px">Análise geral</h2><div id="an"></div>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button data-t="t-rod" class="on"><span>📝</span>Rodadas</button>
+  <button data-t="t-jog"><span>👥</span>Jogadores</button>
+  <button data-t="t-rank"><span>🏆</span>Ranking</button>
+</nav>
+
+<script>
+const KEY="registro_jogos_v1";
+let S={players:[],rounds:[]};
+try{const x=localStorage.getItem(KEY);if(x)S=JSON.parse(x)}catch(e){}
+const $=id=>document.getElementById(id);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nm=id=>(S.players.find(p=>p.id===id)||{name:"?"}).name;
+const fd=d=>d?d.split("-").reverse().join("/"):"";
+let sel=new Set(),win="",edit=null;const DEF="0.50";
+
+function show(t){["t-rod","t-jog","t-rank"].forEach(x=>$(x).classList.toggle("hide",x!==t));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  if(t==="t-rank"){ranking();analise()}window.scrollTo(0,0)}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.t));
+
+function renderForm(){
+  sel=new Set([...sel].filter(id=>S.players.some(p=>p.id===id)));
+  $("rp").innerHTML=S.players.length?S.players.map(p=>`<label class="chip ${sel.has(p.id)?"on":""}" style="margin:0;color:var(--tx);font-size:15px"><input type="checkbox" data-id="${p.id}" ${sel.has(p.id)?"checked":""}>${esc(p.name)}</label>`).join(""):'<span class="mu">Cadastre jogadores na aba Jogadores.</span>';
+  $("rp").querySelectorAll("input").forEach(i=>i.onchange=()=>{i.checked?sel.add(i.dataset.id):sel.delete(i.dataset.id);if(win&&!sel.has(win))win="";renderForm()});
+  const ids=[...sel];
+  $("rw").innerHTML='<option value="">Selecione o vencedor</option>'+ids.map(id=>`<option value="${id}" ${id===win?"selected":""}>${esc(nm(id))}</option>`).join("");
+  $("rw").onchange=e=>{win=e.target.value;preview()};
+  preview();
+}
+function preview(){
+  const e=parseFloat($("re").value),n=sel.size;
+  $("prev").textContent=(e>0&&n>1)?`${n} jogadores · pote ${brl(e*n)} · vencedor ganha ${brl(e*(n-1))} de crédito`:"";
+}
+$("re").oninput=preview;
+$("rs").onclick=()=>{
+  const e=parseFloat($("re").value),d=$("rd").value,m=$("rm");
+  if(!d)return m.textContent="Informe a data.";
+  if(!(e>0))return m.textContent="Informe o valor da entrada.";
+  if(sel.size<2)return m.textContent="Marque pelo menos 2 jogadores.";
+  if(!win)return m.textContent="Escolha o vencedor.";
+  const nr={id:edit||uid(),date:d,entry:e,winner:win,parts:[...sel]};const ix=edit?S.rounds.findIndex(r=>r.id===edit):-1;if(ix>=0)S.rounds[ix]=nr;else S.rounds.push(nr);save();endEdit();
+  sel=new Set();win="";$("re").value=DEF;m.textContent="";renderForm();hist();
+};
+function endEdit(){edit=null;$("rt").textContent="Nova rodada";$("rs").textContent="Salvar rodada";$("rc").classList.add("hide");$("rd").value=new Date().toISOString().slice(0,10)}
+function startEdit(id){
+  const i=S.rounds.findIndex(r=>r.id===id);if(i<0)return;const r=S.rounds[i];
+  edit=id;sel=new Set(r.parts);win=r.winner;$("rd").value=r.date;$("re").value=r.entry;
+  $("rt").textContent="Editando rodada "+(i+1);$("rs").textContent="Salvar alterações";$("rc").classList.remove("hide");$("rm").textContent="";
+  renderForm();window.scrollTo(0,0);
+}
+$("rc").onclick=()=>{endEdit();sel=new Set();win="";$("re").value=DEF;$("rm").textContent="";renderForm()};
+function hist(){
+  $("rl").innerHTML=S.rounds.length?[...S.rounds].reverse().map(r=>{const i=S.rounds.indexOf(r)+1,n=r.parts.length;
+    return `<div class="li"><div><b>Rodada ${i}</b> · ${fd(r.date)}<div class="mu">Entrada ${brl(r.entry)} · ${n} jogadores: ${r.parts.map(id=>esc(nm(id))).join(", ")}</div><div class="pos">🏆 ${esc(nm(r.winner))} +${brl(r.entry*(n-1))}</div></div><div style="white-space:nowrap"><button class="del ed" data-id="${r.id}" title="Editar" style="color:var(--pr)">✎</button><button class="del" data-id="${r.id}" title="Excluir">×</button></div></div>`}).join(""):'<div class="mu">Nenhuma rodada registrada.</div>';
+  $("rl").querySelectorAll(".ed").forEach(b=>b.onclick=()=>startEdit(b.dataset.id));
+  $("rl").querySelectorAll(".del:not(.ed)").forEach(b=>b.onclick=()=>{if(confirm("Excluir esta rodada?")){if(edit===b.dataset.id){endEdit();sel=new Set();win="";$("re").value=DEF;renderForm()}S.rounds=S.rounds.filter(r=>r.id!==b.dataset.id);save();hist()}});
+}
+function players(){
+  $("jl").innerHTML=S.players.length?S.players.map(p=>`<div class="li"><span>${esc(p.name)}</span><button class="del" data-id="${p.id}" title="Remover">×</button></div>`).join(""):'<div class="mu">Nenhum jogador cadastrado.</div>';
+  $("jl").querySelectorAll(".del").forEach(b=>b.onclick=()=>{
+    if(S.rounds.some(r=>r.parts.includes(b.dataset.id)))return $("jm").textContent="Esse jogador tem rodadas registradas. Exclua as rodadas antes de removê-lo.";
+    S.players=S.players.filter(p=>p.id!==b.dataset.id);save();$("jm").textContent="";players();renderForm()});
+}
+$("ja").onclick=()=>{
+  const n=$("jn").value.trim(),m=$("jm");
+  if(!n)return m.textContent="Digite um nome.";
+  if(S.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return m.textContent="Esse nome já existe.";
+  S.players.push({id:uid(),name:n});save();$("jn").value="";m.textContent="";players();renderForm();
+};
+$("jn").onkeydown=e=>{if(e.key==="Enter")$("ja").click()};
+$("qa").onclick=()=>{const n=$("qn").value.trim(),m=$("rm");if(!n)return;
+  if(S.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return m.textContent="Esse nome já existe.";
+  const p={id:uid(),name:n};S.players.push(p);save();sel.add(p.id);$("qn").value="";m.textContent="";renderForm();players()};
+$("qn").onkeydown=e=>{if(e.key==="Enter")$("qa").click()};
+
+function analise(){
+  const st=S.players.map(p=>({id:p.id,n:p.name,g:0,v:0,e:0,w:0,mx:0}));
+  const by=Object.fromEntries(st.map(x=>[x.id,x]));
+  let part=0,mov=0;
+  S.rounds.forEach(r=>{const n=r.parts.length,pot=r.entry*n;mov+=pot;part+=n;
+    r.parts.forEach(id=>{const x=by[id];if(!x)return;x.g++;x.e+=r.entry});
+    const w=by[r.winner];if(w){w.v++;w.w+=pot;w.mx=Math.max(w.mx,r.entry*(n-1))}});
+  st.sort((a,b)=>(b.w-b.e)-(a.w-a.e)||b.v-a.v);
+  const nr=S.rounds.length,box=(t,v)=>`<div style="flex:1 1 45%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px"><div class="mu">${t}</div><b>${v}</b></div>`;
+  $("an").innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${box("Rodadas",nr)}${box("Total movimentado",brl(mov))}${box("Participações",part)}${box("Média de jogadores",nr?(part/nr).toFixed(1).replace(".",","):"0")}</div>`+
+  `<div class="scroll"><table><thead><tr><th>#</th><th>Jogador</th><th>Jogos</th><th>Vit.</th><th>Derr.</th><th>% vit.</th><th>Apostado</th><th>Ganho</th><th>Maior ganho</th><th>Saldo</th></tr></thead><tbody>`+
+  (st.length?st.map((x,i)=>{const s=Math.round((x.w-x.e)*100)/100,c=s>0?"pos":s<0?"neg":"";
+    return `<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${x.g}</td><td>${x.v}</td><td>${x.g-x.v}</td><td>${x.g?Math.round(x.v/x.g*100):0}%</td><td>${brl(x.e)}</td><td>${brl(x.w)}</td><td>${brl(x.mx)}</td><td class="${c}">${brl(s)}</td></tr>`}).join(""):'<tr><td colspan="10" class="mu">Sem dados ainda.</td></tr>')+
+  `</tbody></table></div><div class="mu" style="margin-top:8px">Jogos = rodadas em que participou. Derrotas = jogos sem vitória. Apostado = soma das entradas. Ganho = soma dos potes vencidos.</div>`;
+}
+function ranking(){
+  const st=S.players.map(p=>({p,g:0,v:0,s:0}));
+  const by=Object.fromEntries(st.map(x=>[x.p.id,x]));
+  S.rounds.forEach(r=>{const n=r.parts.length;r.parts.forEach(id=>{if(!by[id])return;by[id].g++;by[id].s+=(id===r.winner)?r.entry*(n-1):-r.entry});if(by[r.winner])by[r.winner].v++});
+  st.sort((a,b)=>b.s-a.s||b.v-a.v||a.p.name.localeCompare(b.p.name));
+  $("rk").innerHTML=st.length?st.map((x,i)=>{const s=Math.round(x.s*100)/100,c=s>0?"pos":s<0?"neg":"";
+    return `<tr><td>${i+1}</td><td>${esc(x.p.name)}</td><td>${x.g}</td><td>${x.v}</td><td class="${c}">${brl(s)}</td><td class="${c}">${s>0?"Receber "+brl(s):s<0?"Pagar "+brl(-s):"Quite "+brl(0)}</td></tr>`}).join(""):'<tr><td colspan="6" class="mu">Sem dados ainda.</td></tr>';
+  const rec=st.reduce((a,x)=>a+Math.max(x.s,0),0),pag=st.reduce((a,x)=>a+Math.max(-x.s,0),0);
+  $("rf").innerHTML=st.length?`<tr><td></td><td colspan="2">Total a receber</td><td></td><td colspan="2" class="pos">${brl(rec)}</td></tr><tr><td></td><td colspan="2">Total a pagar</td><td></td><td colspan="2" class="neg">${brl(pag)}</td></tr>`:"";
+}
+
+$("be").onclick=async()=>{const t=JSON.stringify(S);$("bk").value=t;$("bk").select();let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{ok=document.execCommand("copy")}catch(e2){}}$("bm").style.color="var(--ok)";$("bm").textContent=ok?"Dados copiados! Cole em um lugar seguro.":"Selecione e copie o texto acima para guardar."};
+$("bi").onclick=()=>{try{const d=JSON.parse($("bk").value);if(!Array.isArray(d.players)||!Array.isArray(d.rounds))throw 0;
+  if(!confirm("Isso substitui os dados deste aparelho. Continuar?"))return;S=d;save();sel=new Set();win="";renderForm();hist();players();$("bm").style.color="var(--ok)";$("bm").textContent="Dados importados."}
+  catch(e){$("bm").style.color="var(--ng)";$("bm").textContent="Texto inválido. Cole exatamente o que foi exportado."}};
+
+$("rd").value=new Date().toISOString().slice(0,10);
+renderForm();hist();players();
+</script>
+</body>
+</html>
