@@ -114,10 +114,10 @@ nav span{display:block;font-size:20px}
     <div class="msg" id="cm"></div>
   </div>
   <div class="card">
-    <h2>Exportar / importar dados</h2>
-    <div class="mu" style="margin-bottom:8px">Os dados ficam salvos neste aparelho. Toque em Exportar para copiar tudo e guarde o texto (notas, e-mail ou mensagem para você mesmo). Em outro aparelho, cole o texto aqui e toque em Importar, ou escolha um arquivo .json.</div>
-    <textarea id="bk" rows="4" placeholder="Cole aqui o JSON com players e rounds (ou use Importar arquivo)"></textarea>
-    <div class="row" style="margin-top:8px"><button class="sec" id="be">Exportar dados</button><button class="sec" id="bi">Importar dados</button><button class="sec" id="bfb">Importar arquivo</button><input type="file" id="bf" accept=".json,.txt,.html,application/json,text/plain" style="display:none"></div>
+    <h2>Exportar / importar dados (JSON)</h2>
+    <div class="mu" style="margin-bottom:8px">Os dados do sistema são sempre exportados e importados em JSON. Exportar baixa o arquivo .json e também copia o texto. Para importar, escolha o arquivo .json ou cole o JSON abaixo. Importar substitui todos os dados deste aparelho.</div>
+    <textarea id="bk" rows="4" placeholder="Cole aqui o JSON exportado pelo sistema"></textarea>
+    <div class="row" style="margin-top:8px"><button class="sec" id="be">Exportar JSON</button><button class="sec" id="bi">Importar JSON colado</button><button class="sec" id="bfb">Importar arquivo .json</button><input type="file" id="bf" accept=".json,application/json" style="display:none"></div>
     <div class="msg" id="bm"></div>
   </div>
 </section>
@@ -477,12 +477,12 @@ function relat(){
   return{rs,L,pl,tie,per,nome,det:isAdm,camp,cl,
     rec:L.reduce((t,x)=>t+Math.max(x.s,0),0),pag:L.reduce((t,x)=>t+Math.max(-x.s,0),0)}}
 let lastUrl="";
-async function entregar(bytes,nome,mime){
-  const m=$("xm"),blob=new Blob([bytes],{type:mime});
+async function entregar(bytes,nome,mime,mid,pre){
+  const m=$(mid||"xm"),blob=new Blob([bytes],{type:mime});
   if(lastUrl)try{URL.revokeObjectURL(lastUrl)}catch(e){}
   lastUrl=URL.createObjectURL(blob);
   m.style.color="var(--ok)";
-  m.innerHTML="Arquivo gerado. Se o download não começar, toque em: <a href=\""+lastUrl+"\" download=\""+nome+"\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--pr);font-weight:600\">"+esc(nome)+"</a>";
+  m.innerHTML=(pre||"")+"Arquivo gerado. Se o download não começar, toque em: <a href=\""+lastUrl+"\" download=\""+nome+"\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--pr);font-weight:600\">"+esc(nome)+"</a>";
   try{
     const f=new File([blob],nome,{type:mime});
     if(/Android|iPhone|iPad/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:nome});return}
@@ -505,19 +505,16 @@ $("pf").onchange=()=>{const v=$("pf").value;setPeriod(v,fT&&v>fT?v:fT)};
 $("pt").onchange=()=>{const v=$("pt").value;setPeriod(fF&&v&&v<fF?v:fF,v)};
 $("pd").onchange=()=>{const v=$("pd").value;if(v)setPeriod(v,v)};
 
-$("be").onclick=async()=>{const t=JSON.stringify(S);$("bk").value=t;$("bk").select();let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{ok=document.execCommand("copy")}catch(e2){}}$("bm").style.color="var(--ok)";$("bm").textContent=ok?"Copiado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas. Cole em um lugar seguro.":"Selecione e copie o texto acima ("+S.players.length+" jogadores e "+S.rounds.length+" rodadas)."};
+$("be").onclick=async()=>{
+  const t=JSON.stringify(S,null,2);$("bk").value=t;
+  let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{$("bk").select();ok=document.execCommand("copy")}catch(e2){}}
+  const nome="registro_de_jogos_"+new Date().toISOString().slice(0,10)+".json";
+  entregar(U8(t),nome,"application/json","bm",S.players.length+" jogadores e "+S.rounds.length+" rodadas"+(ok?" (texto copiado). ":". "))};
 function parseImport(raw){
-  let t=String(raw||"").replace(/^\uFEFF/,"").trim();
-  if(!t)throw new Error("O campo está vazio.");
-  const m=t.match(/<script[^>]*id=["']seed["'][^>]*>([\s\S]*?)<\/script>/i);
-  if(m)t=m[1].trim();
-  t=t.replace(/^```[a-z]*\s*/i,"").replace(/```\s*$/,"").trim();
+  const t=String(raw||"").replace(/^\uFEFF/,"").trim();
+  if(!t)throw new Error("O campo está vazio. Cole o JSON ou escolha um arquivo .json.");
   let d;
-  try{d=JSON.parse(t)}catch(e){
-    const i=t.indexOf("{"),j=t.lastIndexOf("}");
-    if(i<0||j<=i)throw new Error("Não encontrei dados no formato esperado (JSON com \"players\" e \"rounds\").");
-    try{d=JSON.parse(t.slice(i,j+1))}catch(e2){throw new Error("O texto não é um JSON válido. Copie o conteúdo inteiro, do { até o }.")}
-  }
+  try{d=JSON.parse(t)}catch(e){throw new Error("O conteúdo não é um JSON válido. Use o arquivo .json exportado pelo sistema.")}
   if(!d||!Array.isArray(d.players)||!Array.isArray(d.rounds))throw new Error("Faltam as listas \"players\" e \"rounds\".");
   const players=d.players.map((p,i)=>{
     if(!p||p.id==null||p.id===""||!String(p.name||"").trim())throw new Error("Jogador "+(i+1)+": precisa de id e name.");
@@ -551,6 +548,7 @@ function doImport(text){
 $("bi").onclick=()=>doImport($("bk").value);
 $("bfb").onclick=()=>$("bf").click();
 $("bf").onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+  if(!/\.json$/i.test(f.name)&&f.type!=="application/json"){$("bm").style.color="var(--ng)";$("bm").textContent="Escolha um arquivo .json.";$("bf").value="";return}
   const fr=new FileReader();
   fr.onload=()=>{$("bk").value=String(fr.result);doImport(fr.result);$("bf").value=""};
   fr.onerror=()=>{$("bm").style.color="var(--ng)";$("bm").textContent="Não consegui ler o arquivo.";$("bf").value=""};
