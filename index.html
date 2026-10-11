@@ -153,10 +153,10 @@ let isAdm=false;
 try{isAdm=sessionStorage.getItem("adm")==="1"}catch(e){}
 const sigOf=o=>{const s=JSON.stringify(o);let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return String(h)};
 const preSel=()=>{const l=[...S.rounds].reverse().find(r=>!isC(cn(r)));sel=new Set(l?l.parts.filter(id=>S.players.some(p=>p.id===id)):[])};
-const loadDraft=()=>{try{const x=localStorage.getItem(KEY);if(x){const d=norm(JSON.parse(x)),sg=sigOf(SEED);
+const loadDraft=()=>{try{const x=localStorage.getItem(KEY);if(x){const d=norm(JSON.parse(x)),sg=sigOf(SEED)+"m2";
   if(localStorage.getItem(KEY+"_sig")!==sg){
     const mp={};SEED.players.forEach(p=>{const q=d.players.find(q=>q.id===p.id)||d.players.find(q=>q.name.toLowerCase()===p.name.toLowerCase());if(q)mp[p.id]=q.id;else{d.players.push(clone(p));mp[p.id]=p.id}});
-    SEED.rounds.forEach(r=>{if(!d.rounds.some(q=>q.id===r.id)){const c=clone(r);c.winner=mp[c.winner]||c.winner;c.parts=c.parts.map(i=>mp[i]||i);d.rounds.push(c)}});
+    SEED.rounds.forEach(r=>{const o=d.rounds.find(q=>q.id===r.id);if(o){if(o.camp!==r.camp)o.camp=r.camp}else{const c=clone(r);c.winner=mp[c.winner]||c.winner;c.parts=c.parts.map(i=>mp[i]||i);d.rounds.push(c)}});
     SEED.champs.forEach(c=>{if(!d.champs.some(q=>q.name===c.name)){d.champs.push({name:c.name,closed:true,champion:mp[c.champion]||c.champion,vice:mp[c.vice]||c.vice})}});
     localStorage.setItem(KEY,JSON.stringify(d));localStorage.setItem(KEY+"_sig",sg)}
   return d}}catch(e){}return null};
@@ -173,7 +173,7 @@ function buildDoc(j){
   return '<!DOCTYPE html><html lang="pt-BR"><head>'+g("meta[charset]")+g("meta[name=viewport]")+g("title")+g("#app-css")+'</head><body>'+MAIN0+NAV0+'<scr'+'ipt id="seed" type="application/json">'+j+'</scr'+'ipt><scr'+'ipt id="app-js">'+document.getElementById("app-js").textContent+'</scr'+'ipt></body></html>';
 }
 const $=id=>document.getElementById(id);
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KEY+"_sig",sigOf(SEED))}catch(e){}pstat()};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KEY+"_sig",sigOf(SEED)+"m2")}catch(e){}pstat()};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
