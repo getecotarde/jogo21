@@ -68,6 +68,9 @@ nav span{display:block;font-size:20px}
 .rr .vl{text-align:right;flex:none;font-weight:800}
 .rr .vl small{display:block;font-weight:500;color:var(--mu);font-size:12px}
 @media (max-width:380px){.pc .md{font-size:26px}.pc .nm{font-size:13px}.p1 .nm{font-size:15px}}
+.kr{padding:11px 12px;border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;cursor:pointer;background:var(--bg)}
+.kr.on{border-color:var(--pr);background:color-mix(in srgb,var(--pr) 12%,var(--bg))}
+.kr b{display:block}.kr .pd{margin-top:5px;font-size:14px;font-weight:600}
 </style>
 </head>
 <body>
@@ -79,6 +82,9 @@ nav span{display:block;font-size:20px}
 <section id="t-rod">
   <div class="card">
     <h2 id="rt">Nova rodada</h2>
+    <label>Campeonato (conjunto de rodadas)</label>
+    <select id="rcamp"></select>
+    <input id="rcnew" class="hide" placeholder="Nome do novo campeonato (ex.: Jogo 21 - 2027)" maxlength="60" style="margin-top:8px">
     <div class="row"><div><label>Data</label><input type="date" id="rd"></div>
     <div><label>Entrada por jogador (R$)</label><input type="number" id="re" min="0" step="0.01" inputmode="decimal" value="0.50" placeholder="0,50"></div></div>
     <label>Quem jogou (toque para marcar)</label>
@@ -102,6 +108,12 @@ nav span{display:block;font-size:20px}
     <div id="jl"></div>
   </div>
   <div class="card">
+    <h2>Campeonatos</h2>
+    <div class="mu" style="margin-bottom:6px">Cada conjunto de rodadas tem um nome. Campeão, vice e 3º colocado são sempre de um campeonato. Toque em ✎ para renomear.</div>
+    <div id="cl"></div>
+    <div class="msg" id="cm"></div>
+  </div>
+  <div class="card">
     <h2>Exportar / importar dados</h2>
     <div class="mu" style="margin-bottom:8px">Os dados ficam salvos neste aparelho. Toque em Exportar para copiar tudo e guarde o texto (notas, e-mail ou mensagem para você mesmo). Em outro aparelho, cole o texto aqui e toque em Importar, ou escolha um arquivo .json.</div>
     <textarea id="bk" rows="4" placeholder="Cole aqui o JSON com players e rounds (ou use Importar arquivo)"></textarea>
@@ -114,6 +126,8 @@ nav span{display:block;font-size:20px}
   <div class="card">
     <h2>📅 Período do ranking</h2>
     <div class="pills" id="pc"></div>
+    <label>Campeonato</label>
+    <select id="pk"></select>
     <div class="row" style="margin-top:6px"><div><label>De</label><input type="date" id="pf"></div><div><label>Até</label><input type="date" id="pt"></div></div>
     <label>Ou escolha o dia de um jogo</label>
     <select id="pd"></select>
@@ -122,8 +136,10 @@ nav span{display:block;font-size:20px}
     <div class="row"><button class="sec" id="xx" type="button" style="flex:1 1 0">📊 Excel</button><button class="sec" id="xp" type="button" style="flex:1 1 0">📄 PDF</button></div>
     <div class="msg" id="xm" style="color:var(--mu)"></div>
   </div>
+  <div class="card hide" id="kc"><h2>🏅 Campeonatos</h2><div class="mu" style="margin-bottom:8px">Toque em um campeonato para ver o ranking dele.</div><div id="kl"></div></div>
   <div class="card">
-    <h2>🏆 Ranking</h2>
+    <h2 id="rkt">🏆 Ranking</h2>
+    <div class="mu" id="rkh" style="margin:-4px 0 8px"></div>
     <div id="pod"></div>
     <div id="rkl"></div>
   </div>
@@ -182,6 +198,7 @@ function show(t){["t-rod","t-jog","t-rank"].forEach(x=>$(x).classList.toggle("hi
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.t));
 
 function renderForm(){
+  renderCamp();
   sel=new Set([...sel].filter(id=>S.players.some(p=>p.id===id)));
   $("rp").innerHTML=S.players.length?S.players.map(p=>`<label class="chip ${sel.has(p.id)?"on":""}" style="margin:0;color:var(--tx);font-size:15px"><input type="checkbox" data-id="${p.id}" ${sel.has(p.id)?"checked":""}>${esc(p.name)}</label>`).join(""):'<span class="mu">Cadastre jogadores na aba Jogadores.</span>';
   $("rp").querySelectorAll("input").forEach(i=>i.onchange=()=>{i.checked?sel.add(i.dataset.id):sel.delete(i.dataset.id);if(win&&!sel.has(win))win="";renderForm()});
@@ -190,6 +207,13 @@ function renderForm(){
   $("rw").onchange=e=>{win=e.target.value;preview()};
   preview();
 }
+let campSel=null;
+function renderCamp(){
+  const names=[...new Set(S.rounds.filter(r=>r.camp).map(r=>r.camp))];
+  if(campSel===null||(campSel!=="__new__"&&!names.includes(campSel))){const last=[...S.rounds].reverse().find(r=>r.camp);campSel=last?last.camp:"__new__"}
+  $("rcamp").innerHTML=names.map(n=>`<option value="${esc(n)}"${n===campSel?" selected":""}>${esc(n)}</option>`).join("")+`<option value="__new__"${campSel==="__new__"?" selected":""}>➕ Novo campeonato…</option>`;
+  $("rcnew").classList.toggle("hide",campSel!=="__new__")}
+$("rcamp").onchange=()=>{campSel=$("rcamp").value;renderCamp();if(campSel==="__new__")$("rcnew").focus()};
 function preview(){
   const e=parseFloat($("re").value),n=sel.size;
   $("prev").textContent=(e>0&&n>1)?`${n} jogadores · pote ${brl(e*n)} · vencedor ganha ${brl(e*(n-1))} de crédito`:"";
@@ -201,23 +225,40 @@ $("rs").onclick=()=>{
   if(!(e>0))return m.textContent="Informe o valor da entrada.";
   if(sel.size<2)return m.textContent="Marque pelo menos 2 jogadores.";
   if(!win)return m.textContent="Escolha o vencedor.";
-  const nr={id:edit||uid(),date:d,entry:e,winner:win,parts:[...sel]};const ix=edit?S.rounds.findIndex(r=>r.id===edit):-1;if(ix>=0)S.rounds[ix]=nr;else S.rounds.push(nr);save();endEdit();
+  const cname=campSel==="__new__"?$("rcnew").value.trim():campSel;
+  if(!cname)return m.textContent="Escolha ou informe o nome do campeonato.";
+  const nr={id:edit||uid(),date:d,camp:cname,entry:e,winner:win,parts:[...sel]};const ix=edit?S.rounds.findIndex(r=>r.id===edit):-1;if(ix>=0)S.rounds[ix]=nr;else S.rounds.push(nr);save();endEdit();
+  campSel=cname;$("rcnew").value="";
   sel=new Set();win="";$("re").value=DEF;m.textContent="";renderForm();hist();
 };
 function endEdit(){edit=null;$("rt").textContent="Nova rodada";$("rs").textContent="Salvar rodada";$("rc").classList.add("hide");$("rd").value=new Date().toISOString().slice(0,10)}
 function startEdit(id){
   const i=S.rounds.findIndex(r=>r.id===id);if(i<0)return;const r=S.rounds[i];
-  edit=id;sel=new Set(r.parts);win=r.winner;$("rd").value=r.date;$("re").value=r.entry;
+  edit=id;campSel=r.camp||"__new__";$("rcnew").value="";sel=new Set(r.parts);win=r.winner;$("rd").value=r.date;$("re").value=r.entry;
   $("rt").textContent="Editando rodada "+(i+1);$("rs").textContent="Salvar alterações";$("rc").classList.remove("hide");$("rm").textContent="";
   renderForm();window.scrollTo(0,0);
 }
 $("rc").onclick=()=>{endEdit();sel=new Set();win="";$("re").value=DEF;$("rm").textContent="";renderForm()};
 function hist(){
   $("rl").innerHTML=S.rounds.length?[...S.rounds].reverse().map(r=>{const i=S.rounds.indexOf(r)+1,n=r.parts.length;
-    return `<div class="li"><div><b>Rodada ${i}</b> · ${fd(r.date)}<div class="mu">Entrada ${brl(r.entry)} · ${n} jogadores: ${r.parts.map(id=>esc(nm(id))).join(", ")}</div><div class="pos">🏆 ${esc(nm(r.winner))} +${brl(r.entry*(n-1))}</div></div><div style="white-space:nowrap"><button class="del ed" data-id="${r.id}" title="Editar" style="color:var(--pr)">✎</button><button class="del" data-id="${r.id}" title="Excluir">×</button></div></div>`}).join(""):'<div class="mu">Nenhuma rodada registrada.</div>';
+    return `<div class="li"><div><b>Rodada ${i}</b> · ${fd(r.date)}<div class="mu">🏅 ${esc(cn(r))} · Entrada ${brl(r.entry)} · ${n} jogadores: ${r.parts.map(id=>esc(nm(id))).join(", ")}</div><div class="pos">🏆 ${esc(nm(r.winner))} +${brl(r.entry*(n-1))}</div></div><div style="white-space:nowrap"><button class="del ed" data-id="${r.id}" title="Editar" style="color:var(--pr)">✎</button><button class="del" data-id="${r.id}" title="Excluir">×</button></div></div>`}).join(""):'<div class="mu">Nenhuma rodada registrada.</div>';
   $("rl").querySelectorAll(".ed").forEach(b=>b.onclick=()=>startEdit(b.dataset.id));
   $("rl").querySelectorAll(".del:not(.ed)").forEach(b=>b.onclick=()=>{if(confirm("Excluir esta rodada?")){if(edit===b.dataset.id){endEdit();sel=new Set();win="";$("re").value=DEF;renderForm()}S.rounds=S.rounds.filter(r=>r.id!==b.dataset.id);save();hist()}});
+  camps();
 }
+let renC=null;
+function camps(){
+  const cl=campGroups(S.rounds);
+  $("cl").innerHTML=cl.length?cl.map(k=>renC===k.name?`<div class="li"><div style="flex:1;margin-right:8px"><input id="cin" value="${esc(k.name)}" maxlength="60"></div><div style="white-space:nowrap"><button class="sec" id="csv" type="button">Salvar</button> <button class="sec" id="ccn" type="button">Cancelar</button></div></div>`:`<div class="li"><div><b>${esc(k.name)}</b><div class="mu">${k.n} ${k.n===1?"rodada":"rodadas"} · ${fd(k.a)}${k.a!==k.b?" a "+fd(k.b):""}</div></div><div><button class="del ed" data-k="${esc(k.name)}" type="button" title="Renomear" style="color:var(--pr)">✎</button></div></div>`).join(""):'<div class="mu">Nenhum campeonato ainda. Ele é criado ao salvar a primeira rodada.</div>';
+  $("cl").querySelectorAll(".ed").forEach(b=>b.onclick=()=>{renC=b.dataset.k;$("cm").textContent="";camps();const i=$("cin");if(i){i.focus();i.select()}});
+  if($("ccn"))$("ccn").onclick=()=>{renC=null;$("cm").textContent="";camps()};
+  if($("csv"))$("csv").onclick=()=>{const nn=$("cin").value.trim(),old=renC,m=$("cm");
+    if(!nn)return m.textContent="Informe o nome.";
+    if(nn===old){renC=null;m.textContent="";return camps()}
+    if(campGroups(S.rounds).some(k=>k.name===nn))return m.textContent="Já existe um campeonato com esse nome.";
+    S.rounds.forEach(r=>{if(cn(r)===old)r.camp=nn});
+    if(fC===old)fC=nn;if(campSel===old)campSel=nn;
+    renC=null;m.textContent="";save();renderForm();hist();ranking();analise()}}
 function players(){
   $("jl").innerHTML=S.players.length?S.players.map(p=>`<div class="li"><span>${esc(p.name)}</span><button class="del" data-id="${p.id}" title="Remover">×</button></div>`).join(""):'<div class="mu">Nenhum jogador cadastrado.</div>';
   $("jl").querySelectorAll(".del").forEach(b=>b.onclick=()=>{
@@ -236,8 +277,10 @@ $("qa").onclick=()=>{const n=$("qn").value.trim(),m=$("rm");if(!n)return;
   const p={id:uid(),name:n};S.players.push(p);save();sel.add(p.id);$("qn").value="";m.textContent="";renderForm();players()};
 $("qn").onkeydown=e=>{if(e.key==="Enter")$("qa").click()};
 
-let fF="",fT="";
-const inR=r=>(!fF||r.date>=fF)&&(!fT||r.date<=fT);
+let fF="",fT="",fC="";
+const cn=r=>r.camp||"Sem campeonato";
+const inR=r=>(!fF||r.date>=fF)&&(!fT||r.date<=fT)&&(!fC||cn(r)===fC);
+function setCamp(k){fC=k||"";ranking();analise()}
 function setPeriod(x,y){fF=x||"";fT=y||"";if(fF&&fT&&fF>fT){const t=fF;fF=fT;fT=t}ranking();analise()}
 function analise(){
   const st0=S.players.map(p=>({id:p.id,n:p.name,g:0,v:0,e:0,w:0,mx:0}));
@@ -255,8 +298,7 @@ function analise(){
     return `<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${x.g}</td><td>${x.v}</td><td>${x.g-x.v}</td><td>${x.g?Math.round(x.v/x.g*100):0}%</td><td>${brl(x.e)}</td><td>${brl(x.w)}</td><td>${brl(x.mx)}</td><td class="${c}">${brl(s)}</td></tr>`}).join(""):'<tr><td colspan="10" class="mu">Sem dados no período.</td></tr>')+
   `</tbody></table></div><div class="mu" style="margin-top:8px">Jogos = rodadas em que participou. Derrotas = jogos sem vitória. Apostado = soma das entradas. Ganho = soma dos potes vencidos.</div>`;
 }
-function calcP(){
-  const rs=S.rounds.filter(inR);
+function stand(rs){
   const st=S.players.map(p=>({p,g:0,v:0,s:0}));
   const by=Object.fromEntries(st.map(x=>[x.p.id,x]));
   rs.forEach(r=>{const n=r.parts.length;r.parts.forEach(id=>{if(!by[id])return;by[id].g++;by[id].s+=(id===r.winner)?r.entry*(n-1):-r.entry});if(by[r.winner])by[r.winner].v++});
@@ -264,28 +306,46 @@ function calcP(){
   L.forEach(x=>x.s=Math.round(x.s*100)/100);
   L.sort((a,b)=>b.s-a.s||b.v-a.v||a.p.name.localeCompare(b.p.name));
   const pl=[];L.forEach((x,i)=>{pl[i]=(i>0&&x.s===L[i-1].s&&x.v===L[i-1].v)?pl[i-1]:i+1});
-  return{rs,L,pl}}
+  return{L,pl}}
+function campGroups(rs){
+  const m=new Map();rs.forEach(r=>{const k=cn(r);if(!m.has(k))m.set(k,[]);m.get(k).push(r)});
+  return[...m.entries()].map(([name,a])=>{const d=a.map(r=>r.date).sort();return{name,rs:a,n:a.length,a:d[0],b:d[d.length-1],...stand(a)}}).sort((x,y)=>x.a<y.a?-1:x.a>y.a?1:x.name.localeCompare(y.name))}
+const podNames=(k,p)=>k.L.filter((x,i)=>k.pl[i]===p).map(x=>x.p.name).join(", ");
+function calcP(){const rs=S.rounds.filter(inR);return{rs,...stand(rs)}}
 function ranking(){
+  const inD=r=>(!fF||r.date>=fF)&&(!fT||r.date<=fT);
+  const cl=campGroups(S.rounds.filter(inD));
+  if(fC&&!cl.some(k=>k.name===fC))fC="";
   const ds=[...new Set(S.rounds.map(r=>r.date))].sort();
   const mn=ds[0]||"",mx=ds[ds.length-1]||"";
-  // controles de período
+  // controles de período e campeonato
   $("pf").min=$("pt").min=mn;$("pf").max=$("pt").max=mx;$("pf").value=fF;$("pt").value=fT;
   const pills=[["Tudo","",""]];
   [...new Set(ds.map(d=>d.slice(0,4)))].forEach(y=>pills.push([y,y+"-01-01",y+"-12-31"]));
   if(ds.length){const t=new Date(mx+"T00:00:00Z");t.setUTCDate(t.getUTCDate()-29);pills.push(["Últimos 30 dias",t.toISOString().slice(0,10),mx])}
   $("pc").innerHTML=pills.map(p=>`<button type="button" class="pill${fF===p[1]&&fT===p[2]?" on":""}" data-a="${p[1]}" data-b="${p[2]}">${p[0]}</button>`).join("");
-  const cnt={};S.rounds.forEach(r=>cnt[r.date]=(cnt[r.date]||0)+1);
-  $("pd").innerHTML='<option value="">Escolher dia do jogo…</option>'+[...ds].reverse().map(d=>`<option value="${d}"${fF===d&&fT===d?" selected":""}>${fd(d)} · ${cnt[d]} rod.</option>`).join("");
+  $("pk").innerHTML='<option value="">Todos os campeonatos</option>'+cl.map(k=>`<option value="${esc(k.name)}"${k.name===fC?" selected":""}>${esc(k.name)} · ${k.n} rod.</option>`).join("");
+  const rC=S.rounds.filter(r=>!fC||cn(r)===fC),cnt={};
+  rC.forEach(r=>cnt[r.date]=(cnt[r.date]||0)+1);
+  $("pd").innerHTML='<option value="">Escolher dia do jogo…</option>'+[...new Set(rC.map(r=>r.date))].sort().reverse().map(d=>`<option value="${d}"${fF===d&&fT===d?" selected":""}>${fd(d)} · ${cnt[d]} rod.</option>`).join("");
+  // lista de campeonatos do período
+  $("kc").classList.toggle("hide",!cl.length);
+  $("kl").innerHTML=cl.map(k=>{const t=[1,2,3].map(n=>podNames(k,n)?["🥇","🥈","🥉"][n-1]+" "+esc(podNames(k,n)):"").filter(Boolean).join("  ");
+    return `<div class="kr${fC===k.name?" on":""}" data-k="${esc(k.name)}"><b>${esc(k.name)}</b><div class="mu">${k.n} ${k.n===1?"rodada":"rodadas"} · ${fd(k.a)}${k.a!==k.b?" a "+fd(k.b):""}</div><div class="pd">${t}</div></div>`}).join("");
+  // ranking do filtro atual
   const {rs,L,pl}=calcP();
+  const single=fC||(cl.length===1?cl[0].name:"");
   const tie=i=>(i>0&&pl[i]===pl[i-1])||(i<L.length-1&&pl[i]===pl[i+1]);
   const dr=rs.map(r=>r.date).sort();
   $("pi").textContent=rs.length?`${rs.length} ${rs.length===1?"rodada":"rodadas"} no período · ${fd(dr[0])}${dr[0]!==dr[dr.length-1]?" a "+fd(dr[dr.length-1]):""}`:"Nenhuma rodada neste período.";
+  $("rkt").textContent=single?"🏆 Ranking · "+single:"🏆 Ranking acumulado";
+  $("rkh").textContent=single?"":(cl.length>1?"Soma de todos os campeonatos do período. Escolha um campeonato para ver o campeão, o vice e o 3º colocado.":"");
   // pódio
-  const LB={1:"Campeão",2:"Vice-campeão",3:"3º colocado"},MD={1:"🥇",2:"🥈",3:"🥉"};
+  const LB=single?{1:"Campeão",2:"Vice-campeão",3:"3º colocado"}:{1:"1º lugar",2:"2º lugar",3:"3º lugar"},MD={1:"🥇",2:"🥈",3:"🥉"};
   const top=L.slice(0,3).map((x,i)=>({x,i}));
   const order=top.length===3?[top[1],top[0],top[2]]:top.length===2?[top[1],top[0]]:top;
   $("pod").innerHTML=top.length?`<div class="pod">`+order.map(({x,i})=>{const k=pl[i],c=x.s>0?"pos":x.s<0?"neg":"";
-    return `<div class="pc p${k}"><div class="md">${k===1?"👑":""}${MD[k]}</div><div class="lb">${LB[k]}${tie(i)?' <span class="tie">(empate)</span>':""}</div><div class="nm">${esc(x.p.name)}</div><div class="sd ${c}">${brl(x.s)}</div><div class="st">${x.v} ${x.v===1?"vitória":"vitórias"} · ${x.g} rod.</div><div class="bs">${k}º</div></div>`}).join("")+`</div>`:'<div class="mu" style="padding:14px 0">Nenhum jogo neste período.</div>';
+    return `<div class="pc p${k}"><div class="md">${k===1&&single?"👑":""}${MD[k]}</div><div class="lb">${LB[k]}${tie(i)?' <span class="tie">(empate)</span>':""}</div><div class="nm">${esc(x.p.name)}</div><div class="sd ${c}">${brl(x.s)}</div><div class="st">${x.v} ${x.v===1?"vitória":"vitórias"} · ${x.g} rod.</div><div class="bs">${k}º</div></div>`}).join("")+`</div>`:'<div class="mu" style="padding:14px 0">Nenhum jogo neste período.</div>';
   // demais colocações
   $("rkl").innerHTML=L.slice(3).map((x,j)=>{const i=j+3,c=x.s>0?"pos":x.s<0?"neg":"",pc=x.g?Math.round(x.v/x.g*100):0;
     return `<div class="rr"><div class="no">${pl[i]}º</div><div class="in"><b>${esc(x.p.name)}</b><div class="mu">${x.v} ${x.v===1?"vitória":"vitórias"} em ${x.g} rod. · ${pc}%${tie(i)?" · empate":""}</div><div class="bar"><i style="width:${pc}%"></i></div></div><div class="vl ${c}">${brl(x.s)}<small>${x.s>0?"a receber":x.s<0?"a pagar":"quite"}</small></div></div>`}).join("");
@@ -319,16 +379,20 @@ function sheetXml(rows,widths){
   return x+'</sheetData></worksheet>'}
 function buildXlsx(R){
   const H=t=>({v:t,s:1}),M=v=>({v,s:2});
-  const r1=[[{v:"Ranking dos jogos",s:4}],["Período: "+R.per],["Rodadas no período: "+R.rs.length],[],
+  const r1=[[{v:"Ranking dos jogos"+(R.camp?" - "+R.camp:" (acumulado)"),s:4}],["Campeonato: "+(R.camp||"todos os campeonatos do período")],["Período: "+R.per],["Rodadas no período: "+R.rs.length],[],
     [H("Pos."),H("Jogador"),H("Rodadas"),H("Vitórias"),H("Saldo (R$)"),H("Situação")]];
   R.L.forEach((x,i)=>r1.push([R.pl[i],x.p.name,x.g,x.v,M(x.s),x.s>0?"Receber":x.s<0?"Pagar":"Quite"]));
   r1.push([],["","Total a receber","","",{v:R.rec,s:5}],["","Total a pagar","","",{v:R.pag,s:5}]);
   const sheets=[["Ranking",sheetXml(r1,[7,24,10,10,14,12])]];
+  if(!R.camp){
+    const rc=[[H("Campeonato"),H("Período"),H("Rodadas"),H("Campeão"),H("Vice-campeão"),H("3º colocado")]];
+    R.cl.forEach(k=>rc.push([k.name,fd(k.a)+(k.a!==k.b?" a "+fd(k.b):""),k.n,podNames(k,1),podNames(k,2),podNames(k,3)]));
+    sheets.push(["Campeonatos",sheetXml(rc,[30,24,10,22,22,22])])}
   if(R.det){
-    const r2=[[H("Rodada"),H("Data"),H("Entrada (R$)"),H("Participantes"),H("Jogadores"),H("Vencedor"),H("Ganho do vencedor (R$)")]];
+    const r2=[[H("Rodada"),H("Data"),H("Campeonato"),H("Entrada (R$)"),H("Participantes"),H("Jogadores"),H("Vencedor"),H("Ganho do vencedor (R$)")]];
     R.rs.forEach(r=>{const n=r.parts.length,[y,m,d]=r.date.split("-").map(Number);
-      r2.push([S.rounds.indexOf(r)+1,{v:Math.round((Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/864e5),s:3},M(r.entry),n,r.parts.map(nm).join(", "),nm(r.winner),M(r.entry*(n-1))])});
-    sheets.push(["Rodadas",sheetXml(r2,[9,12,13,14,60,16,22])])}
+      r2.push([S.rounds.indexOf(r)+1,{v:Math.round((Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/864e5),s:3},cn(r),M(r.entry),n,r.parts.map(nm).join(", "),nm(r.winner),M(r.entry*(n-1))])});
+    sheets.push(["Rodadas",sheetXml(r2,[9,12,30,13,14,60,16,22])])}
   const ns='xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"',hd='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
   const files=[
    ["[Content_Types].xml",hd+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")+'</Types>'],
@@ -358,10 +422,18 @@ function buildPdf(R){
   const need=h=>{if(y-h<M+24)np()};
   np();
   tx(M,y-18,"Ranking dos jogos",20,1);y-=30;
+  if(R.camp){tx(M,y-2,cut("Campeonato: "+R.camp,12,W-2*M,1),12,1);y-=18}
   tx(M,y-2,cm("Período: "+R.per+"  ·  "+R.rs.length+(R.rs.length===1?" rodada":" rodadas")),10,0,GY);y-=14;
   tx(M,y-2,"Gerado em "+fd(new Date().toISOString().slice(0,10)),9,0,GY);y-=22;
   const LB={1:"Campeão",2:"Vice-campeão",3:"3º colocado"};
-  R.L.slice(0,3).forEach((x,i)=>{const k=R.pl[i];tx(M,y-2,LB[k]+(R.tie(i)?" (empate)":"")+":",11,1);tx(M+110,y-2,x.p.name+"  ("+cm(brl(x.s))+")",11,k===1);y-=16});
+  if(R.camp){
+    R.L.slice(0,3).forEach((x,i)=>{const k=R.pl[i];tx(M,y-2,LB[k]+(R.tie(i)?" (empate)":"")+":",11,1);tx(M+110,y-2,x.p.name+"  ("+cm(brl(x.s))+")",11,k===1);y-=16})}
+  else{
+    tx(M,y-2,"Campeões por campeonato",12,1);y-=20;
+    R.cl.forEach(k=>{const t=[1,2,3].map(n=>podNames(k,n)?[LB[1],LB[2],LB[3]][n-1]+": "+podNames(k,n):"").filter(Boolean).join("   ·   ");
+      const ls=wrapT(t,9,W-2*M-14);need(16+ls.length*12);
+      tx(M,y-2,cut(k.name,11,W-2*M,1),11,1);y-=14;ls.forEach(l=>{tx(M+12,y-2,l,9,0,GY);y-=12});y-=6});
+    y-=4;need(40);tx(M,y-2,"Ranking acumulado (todos os campeonatos)",12,1);y-=20}
   y-=8;
   const th1=()=>{bar(y-14,18);tx(M+6,y-9,"Pos.",9,1);tx(M+44,y-9,"Jogador",9,1);txr(335,y-9,"Rod.",9,1);txr(385,y-9,"Vit.",9,1);txr(455,y-9,"Saldo",9,1);txr(W-M-6,y-9,"Acerto",9,1);y-=22};
   th1();
@@ -376,7 +448,7 @@ function buildPdf(R){
     need(60);tx(M,y-12,"Rodadas do período",13,1);y-=26;
     const th2=()=>{bar(y-14,18);tx(M+6,y-9,"Rod.",9,1);tx(M+46,y-9,"Data",9,1);txr(190,y-9,"Entrada",9,1);txr(245,y-9,"Part.",9,1);tx(262,y-9,"Vencedor",9,1);txr(W-M-6,y-9,"Ganho",9,1);y-=22};
     th2();
-    R.rs.forEach(r=>{const n=r.parts.length,ls=wrapT("Jogadores: "+r.parts.map(nm).join(", "),8,W-2*M-50).slice(0,3),h=17+ls.length*11;
+    R.rs.forEach(r=>{const n=r.parts.length,ls=wrapT((R.camp?"":cn(r)+"  ·  ")+"Jogadores: "+r.parts.map(nm).join(", "),8,W-2*M-50).slice(0,3),h=17+ls.length*11;
       if(y-h<M+24){np();th2()}
       tx(M+6,y-9,String(S.rounds.indexOf(r)+1),10);tx(M+46,y-9,fd(r.date),10);txr(190,y-9,cm(brl(r.entry)),10);txr(245,y-9,String(n),10);
       tx(262,y-9,cut(nm(r.winner),10,170,1),10,1);txr(W-M-6,y-9,cm(brl(r.entry*(n-1))),10,1,GR);
@@ -397,9 +469,12 @@ function relat(){
   const {rs,L,pl}=calcP();
   const tie=i=>(i>0&&pl[i]===pl[i-1])||(i<L.length-1&&pl[i]===pl[i+1]);
   const ds=rs.map(r=>r.date).sort(),a=ds[0],b=ds[ds.length-1];
+  const cl=campGroups(rs),camp=fC||(cl.length===1?cl[0].name:"");
+  const slug=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
   const per=!rs.length?"":(a===b?fd(a):fd(a)+" a "+fd(b));
-  const nome=!rs.length?"":(a===b?"ranking_"+a:"ranking_"+a+"_a_"+b);
-  return{rs,L,pl,tie,per,nome,det:isAdm,
+  const sufd=a===b?a:a+"_a_"+b;
+  const nome=!rs.length?"":(camp?"ranking_"+(slug(camp)||"campeonato")+((fF||fT)?"_"+sufd:""):"ranking_"+sufd);
+  return{rs,L,pl,tie,per,nome,det:isAdm,camp,cl,
     rec:L.reduce((t,x)=>t+Math.max(x.s,0),0),pag:L.reduce((t,x)=>t+Math.max(-x.s,0),0)}}
 let lastUrl="";
 async function entregar(bytes,nome,mime){
@@ -423,6 +498,8 @@ function exportar(tipo){
   }catch(e){m.style.color="var(--ng)";m.textContent="Não foi possível gerar o arquivo: "+((e&&e.message)||"erro")}}
 $("xx").onclick=()=>exportar("x");
 $("xp").onclick=()=>exportar("p");
+$("pk").onchange=()=>setCamp($("pk").value);
+$("kl").onclick=e=>{const r=e.target.closest(".kr");if(r)setCamp(r.dataset.k===fC?"":r.dataset.k)};
 $("pc").onclick=e=>{const b=e.target.closest("button");if(b)setPeriod(b.dataset.a,b.dataset.b)};
 $("pf").onchange=()=>{const v=$("pf").value;setPeriod(v,fT&&v>fT?v:fT)};
 $("pt").onchange=()=>{const v=$("pt").value;setPeriod(fF&&v&&v<fF?v:fF,v)};
@@ -461,14 +538,14 @@ function parseImport(raw){
     parts.forEach(x=>{if(!ids.has(x))throw new Error(n+"participante \""+x+"\" não está na lista de jogadores.")});
     const winner=String(r.winner==null?"":r.winner);
     if(!parts.includes(winner))throw new Error(n+"o vencedor precisa estar entre os participantes.");
-    return{id:String(r.id),date,entry,winner,parts}});
+    return{id:String(r.id),date,camp:String(r.camp==null?"":r.camp).trim(),entry,winner,parts}});
   return{players,rounds}}
 function doImport(text){
   const bm=$("bm");
   try{
     const d=parseImport(text);
     if(!confirm("Importar "+d.players.length+" jogadores e "+d.rounds.length+" rodadas? Isso substitui todos os dados deste aparelho."))return;
-    S=d;fF="";fT="";save();sel=new Set();win="";edit=null;renderForm();hist();players();
+    S=d;fF="";fT="";fC="";campSel=null;renC=null;save();sel=new Set();win="";edit=null;renderForm();hist();players();
     bm.style.color="var(--ok)";bm.textContent="Importado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas."
   }catch(e){bm.style.color="var(--ng)";bm.textContent=(e&&e.message)||"Texto inválido."}}
 $("bi").onclick=()=>doImport($("bk").value);
