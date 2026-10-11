@@ -75,9 +75,9 @@ nav span{display:block;font-size:20px}
   </div>
   <div class="card">
     <h2>Exportar / importar dados</h2>
-    <div class="mu" style="margin-bottom:8px">Os dados ficam salvos neste aparelho. Toque em Exportar para copiar tudo e guarde o texto (notas, e-mail ou mensagem para você mesmo). Em outro aparelho, cole o texto aqui e toque em Importar.</div>
-    <textarea id="bk" rows="4" placeholder="Cole aqui os dados exportados para importar"></textarea>
-    <div class="row" style="margin-top:8px"><button class="sec" id="be">Exportar dados</button><button class="sec" id="bi">Importar dados</button></div>
+    <div class="mu" style="margin-bottom:8px">Os dados ficam salvos neste aparelho. Toque em Exportar para copiar tudo e guarde o texto (notas, e-mail ou mensagem para você mesmo). Em outro aparelho, cole o texto aqui e toque em Importar, ou escolha um arquivo .json.</div>
+    <textarea id="bk" rows="4" placeholder="Cole aqui o JSON com players e rounds (ou use Importar arquivo)"></textarea>
+    <div class="row" style="margin-top:8px"><button class="sec" id="be">Exportar dados</button><button class="sec" id="bi">Importar dados</button><button class="sec" id="bfb">Importar arquivo</button><input type="file" id="bf" accept=".json,.txt,.html,application/json,text/plain" style="display:none"></div>
     <div class="msg" id="bm"></div>
   </div>
 </section>
@@ -218,9 +218,55 @@ function ranking(){
 }
 
 $("be").onclick=async()=>{const t=JSON.stringify(S);$("bk").value=t;$("bk").select();let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{ok=document.execCommand("copy")}catch(e2){}}$("bm").style.color="var(--ok)";$("bm").textContent=ok?"Copiado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas. Cole em um lugar seguro.":"Selecione e copie o texto acima ("+S.players.length+" jogadores e "+S.rounds.length+" rodadas)."};
-$("bi").onclick=()=>{try{const d=JSON.parse($("bk").value);if(!Array.isArray(d.players)||!Array.isArray(d.rounds)||!d.players.every(p=>p&&p.id&&p.name)||!d.rounds.every(r=>r&&r.id&&r.date&&r.entry>=0&&r.winner&&Array.isArray(r.parts)))throw 0;
-  if(!confirm("Importar "+d.players.length+" jogadores e "+d.rounds.length+" rodadas? Isso substitui todos os dados deste aparelho."))return;S=d;save();sel=new Set();win="";renderForm();hist();players();$("bm").style.color="var(--ok)";$("bm").textContent="Importado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas."}
-  catch(e){$("bm").style.color="var(--ng)";$("bm").textContent="Texto inválido. Cole exatamente o que foi exportado."}};
+function parseImport(raw){
+  let t=String(raw||"").replace(/^\uFEFF/,"").trim();
+  if(!t)throw new Error("O campo está vazio.");
+  const m=t.match(/<script[^>]*id=["']seed["'][^>]*>([\s\S]*?)<\/script>/i);
+  if(m)t=m[1].trim();
+  t=t.replace(/^```[a-z]*\s*/i,"").replace(/```\s*$/,"").trim();
+  let d;
+  try{d=JSON.parse(t)}catch(e){
+    const i=t.indexOf("{"),j=t.lastIndexOf("}");
+    if(i<0||j<=i)throw new Error("Não encontrei dados no formato esperado (JSON com \"players\" e \"rounds\").");
+    try{d=JSON.parse(t.slice(i,j+1))}catch(e2){throw new Error("O texto não é um JSON válido. Copie o conteúdo inteiro, do { até o }.")}
+  }
+  if(!d||!Array.isArray(d.players)||!Array.isArray(d.rounds))throw new Error("Faltam as listas \"players\" e \"rounds\".");
+  const players=d.players.map((p,i)=>{
+    if(!p||p.id==null||p.id===""||!String(p.name||"").trim())throw new Error("Jogador "+(i+1)+": precisa de id e name.");
+    return{id:String(p.id),name:String(p.name).trim()}});
+  const ids=new Set(players.map(p=>p.id));
+  if(ids.size!==players.length)throw new Error("Há jogadores com id repetido.");
+  const rounds=d.rounds.map((r,i)=>{
+    const n="Rodada "+(i+1)+": ";
+    if(!r||r.id==null||r.id==="")throw new Error(n+"falta o id.");
+    let date=String(r.date||"").trim();
+    const br=date.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(br)date=br[3]+"-"+br[2].padStart(2,"0")+"-"+br[1].padStart(2,"0");
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error(n+"data inválida (use AAAA-MM-DD).");
+    const entry=typeof r.entry==="number"?r.entry:Number(String(r.entry).replace(",","."));
+    if(!isFinite(entry)||entry<0)throw new Error(n+"valor da entrada inválido.");
+    if(!Array.isArray(r.parts)||!r.parts.length)throw new Error(n+"faltam os participantes (parts).");
+    const parts=r.parts.map(String);
+    parts.forEach(x=>{if(!ids.has(x))throw new Error(n+"participante \""+x+"\" não está na lista de jogadores.")});
+    const winner=String(r.winner==null?"":r.winner);
+    if(!parts.includes(winner))throw new Error(n+"o vencedor precisa estar entre os participantes.");
+    return{id:String(r.id),date,entry,winner,parts}});
+  return{players,rounds}}
+function doImport(text){
+  const bm=$("bm");
+  try{
+    const d=parseImport(text);
+    if(!confirm("Importar "+d.players.length+" jogadores e "+d.rounds.length+" rodadas? Isso substitui todos os dados deste aparelho."))return;
+    S=d;save();sel=new Set();win="";edit=null;renderForm();hist();players();
+    bm.style.color="var(--ok)";bm.textContent="Importado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas."
+  }catch(e){bm.style.color="var(--ng)";bm.textContent=(e&&e.message)||"Texto inválido."}}
+$("bi").onclick=()=>doImport($("bk").value);
+$("bfb").onclick=()=>$("bf").click();
+$("bf").onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+  const fr=new FileReader();
+  fr.onload=()=>{$("bk").value=String(fr.result);doImport(fr.result);$("bf").value=""};
+  fr.onerror=()=>{$("bm").style.color="var(--ng)";$("bm").textContent="Não consegui ler o arquivo.";$("bf").value=""};
+  fr.readAsText(f)};
 
 $("rd").value=new Date().toISOString().slice(0,10);
 renderForm();hist();players();
