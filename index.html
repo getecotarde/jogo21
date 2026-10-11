@@ -71,6 +71,9 @@ nav span{display:block;font-size:20px}
 .kr{padding:11px 12px;border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;cursor:pointer;background:var(--bg)}
 .kr.on{border-color:var(--pr);background:color-mix(in srgb,var(--pr) 12%,var(--bg))}
 .kr b{display:block}.kr .pd{margin-top:5px;font-size:14px;font-weight:600}
+.kh{display:flex;align-items:center;gap:10px;cursor:pointer}.kh .ar{width:16px;color:var(--mu)}.kh .in{flex:1;min-width:0}.kh .pd{margin-top:5px;font-size:14px;font-weight:600}
+.bdg{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid var(--bd);color:var(--mu);white-space:nowrap}.bdg.cl{color:var(--ok);border-color:var(--ok)}
+.kb{margin-top:12px;border-top:1px solid var(--bd);padding-top:10px}
 </style>
 </head>
 <body>
@@ -84,7 +87,7 @@ nav span{display:block;font-size:20px}
     <h2 id="rt">Nova rodada</h2>
     <label>Campeonato (conjunto de rodadas)</label>
     <select id="rcamp"></select>
-    <input id="rcnew" class="hide" placeholder="Nome do novo campeonato (ex.: Jogo 21 - 2027)" maxlength="60" style="margin-top:8px">
+    <input id="rcnew" class="hide" placeholder="Nome do campeonato (vazio = Campeonato do dia da data)" maxlength="60" style="margin-top:8px">
     <div class="row"><div><label>Data</label><input type="date" id="rd"></div>
     <div><label>Entrada por jogador (R$)</label><input type="number" id="re" min="0" step="0.01" inputmode="decimal" value="0.50" placeholder="0,50"></div></div>
     <label>Quem jogou (toque para marcar)</label>
@@ -123,31 +126,8 @@ nav span{display:block;font-size:20px}
 </section>
 
 <section id="t-rank" class="hide">
-  <div class="card">
-    <h2>📅 Período do ranking</h2>
-    <div class="pills" id="pc"></div>
-    <label>Campeonato</label>
-    <select id="pk"></select>
-    <div class="row" style="margin-top:6px"><div><label>De</label><input type="date" id="pf"></div><div><label>Até</label><input type="date" id="pt"></div></div>
-    <label>Ou escolha o dia de um jogo</label>
-    <select id="pd"></select>
-    <div class="mu" id="pi" style="margin-top:8px"></div>
-    <label>Baixar relatório do período escolhido</label>
-    <div class="row"><button class="sec" id="xx" type="button" style="flex:1 1 0">📊 Excel</button><button class="sec" id="xp" type="button" style="flex:1 1 0">📄 PDF</button></div>
-    <div class="msg" id="xm" style="color:var(--mu)"></div>
-  </div>
-  <div class="card hide" id="kc"><h2>🏅 Campeonatos</h2><div class="mu" style="margin-bottom:8px">Toque em um campeonato para ver o ranking dele.</div><div id="kl"></div></div>
-  <div class="card">
-    <h2 id="rkt">🏆 Ranking</h2>
-    <div class="mu" id="rkh" style="margin:-4px 0 8px"></div>
-    <div id="pod"></div>
-    <div id="rkl"></div>
-  </div>
-  <div class="card">
-    <h2>Acerto com a banca</h2>
-    <div class="scroll"><table><thead><tr><th>#</th><th>Jogador</th><th>Rod.</th><th>Vit.</th><th>Saldo</th><th>A receber / pagar</th></tr></thead><tbody id="rk"></tbody><tfoot id="rf"></tfoot></table></div>
-    <div class="mu" style="margin-top:10px">Saldo positivo: recebe da banca. Saldo negativo: paga à banca. Desempate por número de vitórias.</div>
-  </div>
+  <div class="msg" id="xm" style="color:var(--mu);margin:0 0 6px"></div>
+  <div id="kcs"></div>
   <div class="card" id="anw"><h2>Análise geral</h2><div id="an"></div></div>
 </section>
 <div id="vlink" class="hide" style="text-align:center;margin-top:8px"><button class="sec" id="vl">🔒 Acesso do administrador</button></div>
@@ -156,22 +136,23 @@ nav span{display:block;font-size:20px}
 <nav>
   <button data-t="t-rod" class="on"><span>📝</span>Rodadas</button>
   <button data-t="t-jog"><span>👥</span>Jogadores</button>
-  <button data-t="t-rank"><span>🏆</span>Ranking</button>
+  <button data-t="t-rank"><span>🏆</span>Campeonatos</button>
 </nav>
 
-<script id="seed" type="application/json">{"players":[],"rounds":[]}</script>
+<script id="seed" type="application/json">{"players":[{"id":"p01","name":"Bernard"},{"id":"p02","name":"Warlei"},{"id":"p03","name":"Vitor"},{"id":"p04","name":"Paula"},{"id":"p05","name":"Everton"},{"id":"p06","name":"Vania"},{"id":"p07","name":"Leo"},{"id":"p08","name":"Davi"},{"id":"p09","name":"Aline"},{"id":"p10","name":"Ana"},{"id":"p11","name":"Alfredo"},{"id":"p12","name":"Alessandro"}],"rounds":[{"id":"r001","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p04","parts":["p01","p02","p03","p04","p05","p06","p07","p08"]},{"id":"r002","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p07","parts":["p01","p02","p03","p04","p05","p06","p07","p08"]},{"id":"r003","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p06","parts":["p01","p02","p03","p04","p05","p06","p07","p08"]},{"id":"r004","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p04","parts":["p01","p02","p03","p04","p05","p06","p07","p08"]},{"id":"r005","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p01","parts":["p01","p02","p03","p04","p05","p06","p07","p08"]},{"id":"r006","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p07","parts":["p01","p02","p03","p04","p05","p06","p07","p08"]},{"id":"r007","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p08","parts":["p01","p02","p03","p04","p05","p06","p07","p08"]},{"id":"r008","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p03","parts":["p02","p03","p04","p05","p06","p07"]},{"id":"r009","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p03","parts":["p01","p02","p03","p04","p05","p06","p07"]},{"id":"r010","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p07","parts":["p01","p02","p03","p04","p05","p06","p07"]},{"id":"r011","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p03","parts":["p01","p02","p03","p04","p05","p06","p07"]},{"id":"r012","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p06","parts":["p01","p02","p03","p04","p05","p06","p07"]},{"id":"r013","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p01","parts":["p01","p02","p03","p04","p05","p06","p07"]},{"id":"r014","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p03","parts":["p01","p02","p03","p04","p05","p06","p07"]},{"id":"r015","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p06","parts":["p01","p02","p03","p04","p05","p06","p07"]},{"id":"r016","date":"2024-12-31","camp":"Campeonato do dia 31/12/2024","entry":0.5,"winner":"p03","parts":["p01","p02","p03","p04","p05","p06","p07"]},{"id":"r017","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p07","parts":["p07","p03","p05","p02","p01","p06","p08"]},{"id":"r018","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p05","parts":["p07","p03","p05","p02","p01","p06","p08"]},{"id":"r019","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p06","parts":["p07","p03","p05","p02","p01","p06","p08"]},{"id":"r020","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p02","parts":["p07","p03","p05","p02","p04","p01","p06","p08"]},{"id":"r021","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p02","parts":["p07","p03","p05","p02","p06"]},{"id":"r022","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p02","parts":["p07","p03","p05","p02","p06"]},{"id":"r023","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p05","parts":["p07","p03","p05","p02","p06"]},{"id":"r024","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p07","parts":["p07","p03","p05","p02","p06"]},{"id":"r025","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p05","parts":["p07","p03","p05","p02","p06"]},{"id":"r026","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p07","parts":["p07","p03","p05","p02","p06"]},{"id":"r027","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p06","parts":["p07","p03","p05","p02","p06"]},{"id":"r028","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p09","parts":["p07","p03","p05","p02","p09","p04","p06"]},{"id":"r029","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p07","parts":["p07","p03","p05","p02","p09","p04","p06"]},{"id":"r030","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p03","parts":["p07","p03","p05","p02","p09","p06"]},{"id":"r031","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p04","parts":["p07","p03","p05","p02","p09","p04","p06"]},{"id":"r032","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p03","parts":["p07","p03","p05","p02","p09","p04","p06"]},{"id":"r033","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p05","parts":["p07","p03","p05","p02","p09","p04","p06"]},{"id":"r034","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p04","parts":["p07","p03","p05","p02","p09","p04","p06"]},{"id":"r035","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p07","parts":["p07","p03","p05","p02","p09","p04","p10","p01","p06"]},{"id":"r036","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p07","parts":["p07","p03","p05","p02","p09","p04","p10","p01","p06"]},{"id":"r037","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p03","parts":["p07","p03","p05","p02","p09","p04","p10","p01","p06"]},{"id":"r038","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p03","parts":["p07","p03","p05","p02","p09","p04","p10","p01","p06"]},{"id":"r039","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p04","parts":["p07","p03","p05","p04","p10","p01","p06"]},{"id":"r040","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p07","parts":["p07","p03","p05","p04","p10","p01","p06"]},{"id":"r041","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p01","parts":["p07","p03","p05","p04","p10","p01","p06"]},{"id":"r042","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p04","parts":["p07","p03","p05","p04","p10","p01","p06"]},{"id":"r043","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p01","parts":["p07","p03","p05","p04","p10","p01","p06"]},{"id":"r044","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p04","parts":["p07","p03","p05","p04","p10","p01","p06"]},{"id":"r045","date":"2025-01-01","camp":"Campeonato do dia 01/01/2025","entry":0.5,"winner":"p01","parts":["p07","p03","p05","p04","p10","p01","p06"]},{"id":"r046","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p07","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r047","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p03","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r048","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p07","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r049","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p12","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r050","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p06","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r051","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p04","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r052","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p01","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r053","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p05","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r054","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p11","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r055","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p03","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r056","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p07","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r057","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p07","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r058","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p05","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r059","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p07","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r060","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p01","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r061","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p05","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r062","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p04","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r063","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p06","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r064","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p05","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r065","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p07","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r066","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p03","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r067","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p04","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r068","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p12","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r069","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p05","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r070","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p12","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r071","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p03","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r072","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p05","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r073","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p04","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r074","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p12","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]},{"id":"r075","date":"2026-01-01","camp":"Campeonato do dia 01/01/2026","entry":0.5,"winner":"p11","parts":["p07","p06","p04","p01","p11","p12","p03","p05"]}],"champs":[]}</script>
 <script id="app-js">
 const KEY="registro_jogos_v1";
 let S={players:[],rounds:[]};
 const MAIN0=document.querySelector("main").outerHTML,NAV0=document.querySelector("nav").outerHTML;
 const CODE="246810";
 const clone=o=>JSON.parse(JSON.stringify(o));
+const norm=o=>{o.champs=Array.isArray(o.champs)?o.champs:[];return o};
 let SEED={players:[],rounds:[]};
 try{SEED=JSON.parse(document.getElementById("seed").textContent)}catch(e){}
 let isAdm=false;
 try{isAdm=sessionStorage.getItem("adm")==="1"}catch(e){}
 const loadDraft=()=>{try{const x=localStorage.getItem(KEY);if(x)return JSON.parse(x)}catch(e){}return null};
-S=isAdm?(loadDraft()||clone(SEED)):clone(SEED);
+norm(SEED);S=norm(isAdm?(loadDraft()||clone(SEED)):clone(SEED));
 function pstat(){if(!isAdm)return;const d=JSON.stringify(S)!==JSON.stringify(SEED);$("pst").textContent=d?"Há alterações não publicadas para os visitantes.":"O ranking publicado está atualizado.";$("pub").disabled=!d}
 function applyMode(){
   $("adbar").classList.toggle("hide",!isAdm);document.querySelector("nav").classList.toggle("hide",!isAdm);
@@ -209,8 +190,8 @@ function renderForm(){
 }
 let campSel=null;
 function renderCamp(){
-  const names=[...new Set(S.rounds.filter(r=>r.camp).map(r=>r.camp))];
-  if(campSel===null||(campSel!=="__new__"&&!names.includes(campSel))){const last=[...S.rounds].reverse().find(r=>r.camp);campSel=last?last.camp:"__new__"}
+  const names=[...new Set(S.rounds.filter(r=>r.camp&&!isC(r.camp)).map(r=>r.camp))];
+  if(campSel===null||(campSel!=="__new__"&&!names.includes(campSel))){const last=[...S.rounds].reverse().find(r=>r.camp&&!isC(r.camp));campSel=last?last.camp:"__new__"}
   $("rcamp").innerHTML=names.map(n=>`<option value="${esc(n)}"${n===campSel?" selected":""}>${esc(n)}</option>`).join("")+`<option value="__new__"${campSel==="__new__"?" selected":""}>➕ Novo campeonato…</option>`;
   $("rcnew").classList.toggle("hide",campSel!=="__new__")}
 $("rcamp").onchange=()=>{campSel=$("rcamp").value;renderCamp();if(campSel==="__new__")$("rcnew").focus()};
@@ -225,8 +206,8 @@ $("rs").onclick=()=>{
   if(!(e>0))return m.textContent="Informe o valor da entrada.";
   if(sel.size<2)return m.textContent="Marque pelo menos 2 jogadores.";
   if(!win)return m.textContent="Escolha o vencedor.";
-  const cname=campSel==="__new__"?$("rcnew").value.trim():campSel;
-  if(!cname)return m.textContent="Escolha ou informe o nome do campeonato.";
+  const cname=campSel==="__new__"?($("rcnew").value.trim()||"Campeonato do dia "+fd(d)):campSel;
+  if(isC(cname))return m.textContent="Esse campeonato está encerrado. Reabra-o na aba Campeonatos para registrar rodadas.";
   const nr={id:edit||uid(),date:d,camp:cname,entry:e,winner:win,parts:[...sel]};const ix=edit?S.rounds.findIndex(r=>r.id===edit):-1;if(ix>=0)S.rounds[ix]=nr;else S.rounds.push(nr);save();endEdit();
   campSel=cname;$("rcnew").value="";
   sel=new Set();win="";$("re").value=DEF;m.textContent="";renderForm();hist();
@@ -240,8 +221,8 @@ function startEdit(id){
 }
 $("rc").onclick=()=>{endEdit();sel=new Set();win="";$("re").value=DEF;$("rm").textContent="";renderForm()};
 function hist(){
-  $("rl").innerHTML=S.rounds.length?[...S.rounds].reverse().map(r=>{const i=S.rounds.indexOf(r)+1,n=r.parts.length;
-    return `<div class="li"><div><b>Rodada ${i}</b> · ${fd(r.date)}<div class="mu">🏅 ${esc(cn(r))} · Entrada ${brl(r.entry)} · ${n} jogadores: ${r.parts.map(id=>esc(nm(id))).join(", ")}</div><div class="pos">🏆 ${esc(nm(r.winner))} +${brl(r.entry*(n-1))}</div></div><div style="white-space:nowrap"><button class="del ed" data-id="${r.id}" title="Editar" style="color:var(--pr)">✎</button><button class="del" data-id="${r.id}" title="Excluir">×</button></div></div>`}).join(""):'<div class="mu">Nenhuma rodada registrada.</div>';
+  $("rl").innerHTML=S.rounds.length?[...S.rounds].reverse().map(r=>{const i=S.rounds.filter(x=>cn(x)===cn(r)).indexOf(r)+1,n=r.parts.length,lk=isC(cn(r));
+    return `<div class="li"><div><b>Rodada ${i}</b> · ${fd(r.date)}<div class="mu">🏅 ${esc(cn(r))} · Entrada ${brl(r.entry)} · ${n} jogadores: ${r.parts.map(id=>esc(nm(id))).join(", ")}</div><div class="pos">🏆 ${esc(nm(r.winner))} +${brl(r.entry*(n-1))}</div></div><div style="white-space:nowrap">${lk?'<span class="mu" title="Campeonato encerrado">🔒</span>':`<button class="del ed" data-id="${r.id}" title="Editar" style="color:var(--pr)">✎</button><button class="del" data-id="${r.id}" title="Excluir">×</button>`}</div></div>`}).join(""):'<div class="mu">Nenhuma rodada registrada.</div>';
   $("rl").querySelectorAll(".ed").forEach(b=>b.onclick=()=>startEdit(b.dataset.id));
   $("rl").querySelectorAll(".del:not(.ed)").forEach(b=>b.onclick=()=>{if(confirm("Excluir esta rodada?")){if(edit===b.dataset.id){endEdit();sel=new Set();win="";$("re").value=DEF;renderForm()}S.rounds=S.rounds.filter(r=>r.id!==b.dataset.id);save();hist()}});
   camps();
@@ -249,14 +230,14 @@ function hist(){
 let renC=null;
 function camps(){
   const cl=campGroups(S.rounds);
-  $("cl").innerHTML=cl.length?cl.map(k=>renC===k.name?`<div class="li"><div style="flex:1;margin-right:8px"><input id="cin" value="${esc(k.name)}" maxlength="60"></div><div style="white-space:nowrap"><button class="sec" id="csv" type="button">Salvar</button> <button class="sec" id="ccn" type="button">Cancelar</button></div></div>`:`<div class="li"><div><b>${esc(k.name)}</b><div class="mu">${k.n} ${k.n===1?"rodada":"rodadas"} · ${fd(k.a)}${k.a!==k.b?" a "+fd(k.b):""}</div></div><div><button class="del ed" data-k="${esc(k.name)}" type="button" title="Renomear" style="color:var(--pr)">✎</button></div></div>`).join(""):'<div class="mu">Nenhum campeonato ainda. Ele é criado ao salvar a primeira rodada.</div>';
+  $("cl").innerHTML=cl.length?cl.map(k=>renC===k.name?`<div class="li"><div style="flex:1;margin-right:8px"><input id="cin" value="${esc(k.name)}" maxlength="60"></div><div style="white-space:nowrap"><button class="sec" id="csv" type="button">Salvar</button> <button class="sec" id="ccn" type="button">Cancelar</button></div></div>`:`<div class="li"><div><b>${esc(k.name)}</b><div class="mu">${k.n} ${k.n===1?"rodada":"rodadas"} · ${fd(k.a)}${k.a!==k.b?" a "+fd(k.b):""}${isC(k.name)?" · 🔒 encerrado":""}</div></div><div><button class="del ed" data-k="${esc(k.name)}" type="button" title="Renomear" style="color:var(--pr)">✎</button></div></div>`).join(""):'<div class="mu">Nenhum campeonato ainda. Ele é criado ao salvar a primeira rodada.</div>';
   $("cl").querySelectorAll(".ed").forEach(b=>b.onclick=()=>{renC=b.dataset.k;$("cm").textContent="";camps();const i=$("cin");if(i){i.focus();i.select()}});
   if($("ccn"))$("ccn").onclick=()=>{renC=null;$("cm").textContent="";camps()};
   if($("csv"))$("csv").onclick=()=>{const nn=$("cin").value.trim(),old=renC,m=$("cm");
     if(!nn)return m.textContent="Informe o nome.";
     if(nn===old){renC=null;m.textContent="";return camps()}
     if(campGroups(S.rounds).some(k=>k.name===nn))return m.textContent="Já existe um campeonato com esse nome.";
-    S.rounds.forEach(r=>{if(cn(r)===old)r.camp=nn});
+    S.rounds.forEach(r=>{if(cn(r)===old)r.camp=nn});S.champs.forEach(c=>{if(c.name===old)c.name=nn});if(openK.has(old)){openK.delete(old);openK.add(nn)}
     if(fC===old)fC=nn;if(campSel===old)campSel=nn;
     renC=null;m.textContent="";save();renderForm();hist();ranking();analise()}}
 function players(){
@@ -312,49 +293,49 @@ function campGroups(rs){
   return[...m.entries()].map(([name,a])=>{const d=a.map(r=>r.date).sort();return{name,rs:a,n:a.length,a:d[0],b:d[d.length-1],...stand(a)}}).sort((x,y)=>x.a<y.a?-1:x.a>y.a?1:x.name.localeCompare(y.name))}
 const podNames=(k,p)=>k.L.filter((x,i)=>k.pl[i]===p).map(x=>x.p.name).join(", ");
 function calcP(){const rs=S.rounds.filter(inR);return{rs,...stand(rs)}}
-function ranking(){
-  const inD=r=>(!fF||r.date>=fF)&&(!fT||r.date<=fT);
-  const cl=campGroups(S.rounds.filter(inD));
-  if(fC&&!cl.some(k=>k.name===fC))fC="";
-  const ds=[...new Set(S.rounds.map(r=>r.date))].sort();
-  const mn=ds[0]||"",mx=ds[ds.length-1]||"";
-  // controles de período e campeonato
-  $("pf").min=$("pt").min=mn;$("pf").max=$("pt").max=mx;$("pf").value=fF;$("pt").value=fT;
-  const pills=[["Tudo","",""]];
-  [...new Set(ds.map(d=>d.slice(0,4)))].forEach(y=>pills.push([y,y+"-01-01",y+"-12-31"]));
-  if(ds.length){const t=new Date(mx+"T00:00:00Z");t.setUTCDate(t.getUTCDate()-29);pills.push(["Últimos 30 dias",t.toISOString().slice(0,10),mx])}
-  $("pc").innerHTML=pills.map(p=>`<button type="button" class="pill${fF===p[1]&&fT===p[2]?" on":""}" data-a="${p[1]}" data-b="${p[2]}">${p[0]}</button>`).join("");
-  $("pk").innerHTML='<option value="">Todos os campeonatos</option>'+cl.map(k=>`<option value="${esc(k.name)}"${k.name===fC?" selected":""}>${esc(k.name)} · ${k.n} rod.</option>`).join("");
-  const rC=S.rounds.filter(r=>!fC||cn(r)===fC),cnt={};
-  rC.forEach(r=>cnt[r.date]=(cnt[r.date]||0)+1);
-  $("pd").innerHTML='<option value="">Escolher dia do jogo…</option>'+[...new Set(rC.map(r=>r.date))].sort().reverse().map(d=>`<option value="${d}"${fF===d&&fT===d?" selected":""}>${fd(d)} · ${cnt[d]} rod.</option>`).join("");
-  // lista de campeonatos do período
-  $("kc").classList.toggle("hide",!cl.length);
-  $("kl").innerHTML=cl.map(k=>{const t=[1,2,3].map(n=>podNames(k,n)?["🥇","🥈","🥉"][n-1]+" "+esc(podNames(k,n)):"").filter(Boolean).join("  ");
-    return `<div class="kr${fC===k.name?" on":""}" data-k="${esc(k.name)}"><b>${esc(k.name)}</b><div class="mu">${k.n} ${k.n===1?"rodada":"rodadas"} · ${fd(k.a)}${k.a!==k.b?" a "+fd(k.b):""}</div><div class="pd">${t}</div></div>`}).join("");
-  // ranking do filtro atual
-  const {rs,L,pl}=calcP();
-  const single=fC||(cl.length===1?cl[0].name:"");
-  const tie=i=>(i>0&&pl[i]===pl[i-1])||(i<L.length-1&&pl[i]===pl[i+1]);
-  const dr=rs.map(r=>r.date).sort();
-  $("pi").textContent=rs.length?`${rs.length} ${rs.length===1?"rodada":"rodadas"} no período · ${fd(dr[0])}${dr[0]!==dr[dr.length-1]?" a "+fd(dr[dr.length-1]):""}`:"Nenhuma rodada neste período.";
-  $("rkt").textContent=single?"🏆 Ranking · "+single:"🏆 Ranking acumulado";
-  $("rkh").textContent=single?"":(cl.length>1?"Soma de todos os campeonatos do período. Escolha um campeonato para ver o campeão, o vice e o 3º colocado.":"");
-  // pódio
-  const LB=single?{1:"Campeão",2:"Vice-campeão",3:"3º colocado"}:{1:"1º lugar",2:"2º lugar",3:"3º lugar"},MD={1:"🥇",2:"🥈",3:"🥉"};
+let openK=new Set(),openInit=false,drf={};
+const cinfo=n=>S.champs.find(c=>c.name===n),isC=n=>!!cinfo(n);
+const refreshAll=()=>{ranking();analise();hist();renderForm()};
+function kbody(k,ci){
+  const {L,pl}=k,tie=i=>(i>0&&pl[i]===pl[i-1])||(i<L.length-1&&pl[i]===pl[i+1]),MD={1:"🥇",2:"🥈",3:"🥉"};
   const top=L.slice(0,3).map((x,i)=>({x,i}));
   const order=top.length===3?[top[1],top[0],top[2]]:top.length===2?[top[1],top[0]]:top;
-  $("pod").innerHTML=top.length?`<div class="pod">`+order.map(({x,i})=>{const k=pl[i],c=x.s>0?"pos":x.s<0?"neg":"";
-    return `<div class="pc p${k}"><div class="md">${k===1&&single?"👑":""}${MD[k]}</div><div class="lb">${LB[k]}${tie(i)?' <span class="tie">(empate)</span>':""}</div><div class="nm">${esc(x.p.name)}</div><div class="sd ${c}">${brl(x.s)}</div><div class="st">${x.v} ${x.v===1?"vitória":"vitórias"} · ${x.g} rod.</div><div class="bs">${k}º</div></div>`}).join("")+`</div>`:'<div class="mu" style="padding:14px 0">Nenhum jogo neste período.</div>';
-  // demais colocações
-  $("rkl").innerHTML=L.slice(3).map((x,j)=>{const i=j+3,c=x.s>0?"pos":x.s<0?"neg":"",pc=x.g?Math.round(x.v/x.g*100):0;
-    return `<div class="rr"><div class="no">${pl[i]}º</div><div class="in"><b>${esc(x.p.name)}</b><div class="mu">${x.v} ${x.v===1?"vitória":"vitórias"} em ${x.g} rod. · ${pc}%${tie(i)?" · empate":""}</div><div class="bar"><i style="width:${pc}%"></i></div></div><div class="vl ${c}">${brl(x.s)}<small>${x.s>0?"a receber":x.s<0?"a pagar":"quite"}</small></div></div>`}).join("");
-  // acerto com a banca
-  $("rk").innerHTML=L.length?L.map((x,i)=>{const s=x.s,c=s>0?"pos":s<0?"neg":"";
-    return `<tr><td>${pl[i]}</td><td>${esc(x.p.name)}</td><td>${x.g}</td><td>${x.v}</td><td class="${c}">${brl(s)}</td><td class="${c}">${s>0?"Receber "+brl(s):s<0?"Pagar "+brl(-s):"Quite "+brl(0)}</td></tr>`}).join(""):'<tr><td colspan="6" class="mu">Sem dados no período.</td></tr>';
+  const pod=top.length?`<div class="pod">`+order.map(({x,i})=>{const p=pl[i],c=x.s>0?"pos":x.s<0?"neg":"";
+    return `<div class="pc p${p}"><div class="md">${MD[p]}</div><div class="lb">${p}º lugar${tie(i)?' <span class="tie">(empate)</span>':""}</div><div class="nm">${esc(x.p.name)}</div><div class="sd ${c}">${brl(x.s)}</div><div class="st">${x.v} ${x.v===1?"vitória":"vitórias"} · ${x.g} rod.</div><div class="bs">${p}º</div></div>`}).join("")+`</div>`:"";
   const rec=L.reduce((a,x)=>a+Math.max(x.s,0),0),pag=L.reduce((a,x)=>a+Math.max(-x.s,0),0);
-  $("rf").innerHTML=L.length?`<tr><td></td><td colspan="2">Total a receber</td><td></td><td colspan="2" class="pos">${brl(rec)}</td></tr><tr><td></td><td colspan="2">Total a pagar</td><td></td><td colspan="2" class="neg">${brl(pag)}</td></tr>`:"";
-}
+  const tb=`<div class="scroll" style="margin-top:10px"><table><thead><tr><th>#</th><th>Jogador</th><th>Rod.</th><th>Vit.</th><th>Saldo</th><th>Acerto</th></tr></thead><tbody>`+L.map((x,i)=>{const s=x.s,c=s>0?"pos":s<0?"neg":"";
+    return `<tr><td>${pl[i]}</td><td>${esc(x.p.name)}</td><td>${x.g}</td><td>${x.v}</td><td class="${c}">${brl(s)}</td><td class="${c}">${s>0?"Receber "+brl(s):s<0?"Pagar "+brl(-s):"Quite"}</td></tr>`}).join("")+`</tbody><tfoot><tr><td></td><td colspan="2">Total a receber</td><td></td><td colspan="2" class="pos">${brl(rec)}</td></tr><tr><td></td><td colspan="2">Total a pagar</td><td></td><td colspan="2" class="neg">${brl(pag)}</td></tr></tfoot></table></div><div class="mu" style="margin-top:8px">Classificação do campeonato. Desempate por número de vitórias.</div>`;
+  const rl=k.rs.map((r,j)=>`<div class="li"><div><b>Rodada ${j+1}</b> · ${fd(r.date)}<div class="mu">${r.parts.length} jogadores · entrada ${brl(r.entry)}</div></div><div class="pos">🏆 ${esc(nm(r.winner))}</div></div>`).join("");
+  const det=`<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:600">Rodadas (${k.n})</summary>${rl}</details>`;
+  const res=ci?`<div style="padding:10px 12px;border:1px solid var(--ok);border-radius:12px;margin-bottom:10px"><div>👑 <b>Campeão:</b> ${esc(nm(ci.champion))}</div><div>🥈 <b>Vice-campeão:</b> ${esc(nm(ci.vice))}</div></div>`:"";
+  const exp=`<div class="row" style="margin-top:12px"><button class="sec" data-a="xx" style="flex:1 1 0">📊 Excel</button><button class="sec" data-a="xp" style="flex:1 1 0">📄 PDF</button></div>`;
+  let adm="";
+  if(isAdm){
+    if(ci)adm=`<button class="sec" data-a="reo" style="width:100%;margin-top:10px">🔓 Reabrir campeonato</button>`;
+    else{const d=drf[k.name]||{},has=id=>id&&L.some(x=>x.p.id===id),dc=has(d.c)?d.c:(L[0]?L[0].p.id:""),dv=has(d.v)?d.v:(L[1]?L[1].p.id:"");
+      const op=s=>L.map(x=>`<option value="${x.p.id}"${x.p.id===s?" selected":""}>${esc(x.p.name)}</option>`).join("");
+      adm=`<div style="margin-top:14px;border-top:1px solid var(--bd);padding-top:10px"><h2>Encerrar campeonato</h2><div class="mu">Defina o campeão e o vice para fechar. Depois de encerrado, não é possível lançar nem editar rodadas.</div><div class="row"><div><label>Campeão</label><select data-s="c">${op(dc)}</select></div><div><label>Vice-campeão</label><select data-s="v">${op(dv)}</select></div></div><div class="msg kmsg"></div><button data-a="fin" style="width:100%">🔒 Encerrar campeonato</button></div>`}}
+  return `<div class="kb">${res}${pod}${tb}${det}${exp}${adm}</div>`}
+function ranking(){
+  const cl=campGroups(S.rounds).reverse(),box=$("kcs");
+  if(!openInit&&cl.length){openK.add(cl[0].name);openInit=true}
+  if(!cl.length){box.innerHTML='<div class="card mu">Nenhum campeonato ainda.</div>';return}
+  box.innerHTML=cl.map(k=>{const ci=cinfo(k.name),op=openK.has(k.name),ek=esc(k.name);
+    const per=fd(k.a)+(k.a!==k.b?" a "+fd(k.b):"");
+    const res=ci?`<div class="pd">🥇 ${esc(nm(ci.champion))} &nbsp; 🥈 ${esc(nm(ci.vice))}</div>`:"";
+    return `<div class="card kcamp" data-k="${ek}"><div class="kh"><span class="ar">${op?"▾":"▸"}</span><div class="in"><b>${ek}</b><div class="mu">${k.n} ${k.n===1?"rodada":"rodadas"} · ${per}</div>${res}</div>${ci?'<span class="bdg cl">🔒 Encerrado</span>':'<span class="bdg">🟢 Em andamento</span>'}</div>${op?kbody(k,ci):""}</div>`}).join("")}
+$("kcs").onclick=e=>{
+  const c=e.target.closest(".kcamp");if(!c)return;const n=c.dataset.k;
+  if(e.target.closest(".kh")){openK.has(n)?openK.delete(n):openK.add(n);ranking();return}
+  const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a;
+  if(a==="xx"||a==="xp"){const o=fC;fC=n;try{exportar(a==="xx"?"x":"p")}finally{fC=o}return}
+  if(a==="fin"){const ch=c.querySelector('[data-s="c"]').value,vi=c.querySelector('[data-s="v"]').value,m=c.querySelector(".kmsg");
+    if(!ch||!vi)return m.textContent="Escolha o campeão e o vice-campeão.";
+    if(ch===vi)return m.textContent="Campeão e vice precisam ser jogadores diferentes.";
+    if(!confirm("Encerrar \""+n+"\" com campeão "+nm(ch)+" e vice "+nm(vi)+"?"))return;
+    S.champs=S.champs.filter(x=>x.name!==n);S.champs.push({name:n,closed:true,champion:ch,vice:vi});delete drf[n];save();refreshAll()}
+  if(a==="reo"){if(!confirm("Reabrir \""+n+"\"? O campeão e o vice registrados serão removidos."))return;S.champs=S.champs.filter(x=>x.name!==n);save();refreshAll()}};
+$("kcs").onchange=e=>{const s=e.target;if(!s.dataset.s)return;const n=s.closest(".kcamp").dataset.k;(drf[n]=drf[n]||{})[s.dataset.s]=s.value};
 
 /* ===== Exportar relatório (Excel .xlsx e PDF), sem bibliotecas ===== */
 const CRC=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
@@ -379,7 +360,7 @@ function sheetXml(rows,widths){
   return x+'</sheetData></worksheet>'}
 function buildXlsx(R){
   const H=t=>({v:t,s:1}),M=v=>({v,s:2});
-  const r1=[[{v:"Ranking dos jogos"+(R.camp?" - "+R.camp:" (acumulado)"),s:4}],["Campeonato: "+(R.camp||"todos os campeonatos do período")],["Período: "+R.per],["Rodadas no período: "+R.rs.length],[],
+  const r1=[[{v:"Ranking dos jogos"+(R.camp?" - "+R.camp:" (acumulado)"),s:4}],["Campeonato: "+(R.camp||"todos os campeonatos do período")],["Período: "+R.per],["Rodadas no período: "+R.rs.length],[R.info||""],[],
     [H("Pos."),H("Jogador"),H("Rodadas"),H("Vitórias"),H("Saldo (R$)"),H("Situação")]];
   R.L.forEach((x,i)=>r1.push([R.pl[i],x.p.name,x.g,x.v,M(x.s),x.s>0?"Receber":x.s<0?"Pagar":"Quite"]));
   r1.push([],["","Total a receber","","",{v:R.rec,s:5}],["","Total a pagar","","",{v:R.pag,s:5}]);
@@ -425,6 +406,7 @@ function buildPdf(R){
   if(R.camp){tx(M,y-2,cut("Campeonato: "+R.camp,12,W-2*M,1),12,1);y-=18}
   tx(M,y-2,cm("Período: "+R.per+"  ·  "+R.rs.length+(R.rs.length===1?" rodada":" rodadas")),10,0,GY);y-=14;
   tx(M,y-2,"Gerado em "+fd(new Date().toISOString().slice(0,10)),9,0,GY);y-=22;
+  if(R.info){tx(M,y-2,cm(R.info),10,1);y-=18}
   const LB={1:"Campeão",2:"Vice-campeão",3:"3º colocado"};
   if(R.camp){
     R.L.slice(0,3).forEach((x,i)=>{const k=R.pl[i];tx(M,y-2,LB[k]+(R.tie(i)?" (empate)":"")+":",11,1);tx(M+110,y-2,x.p.name+"  ("+cm(brl(x.s))+")",11,k===1);y-=16})}
@@ -474,7 +456,8 @@ function relat(){
   const per=!rs.length?"":(a===b?fd(a):fd(a)+" a "+fd(b));
   const sufd=a===b?a:a+"_a_"+b;
   const nome=!rs.length?"":(camp?"ranking_"+(slug(camp)||"campeonato")+((fF||fT)?"_"+sufd:""):"ranking_"+sufd);
-  return{rs,L,pl,tie,per,nome,det:isAdm,camp,cl,
+  const ci=camp?cinfo(camp):null,info=camp?(ci?"Encerrado · Campeão: "+nm(ci.champion)+" · Vice-campeão: "+nm(ci.vice):"Campeonato em andamento"):"";
+  return{rs,L,pl,tie,per,nome,det:isAdm,camp,cl,info,
     rec:L.reduce((t,x)=>t+Math.max(x.s,0),0),pag:L.reduce((t,x)=>t+Math.max(-x.s,0),0)}}
 let lastUrl="";
 async function entregar(bytes,nome,mime,mid,pre){
@@ -496,14 +479,6 @@ function exportar(tipo){
     if(tipo==="x")entregar(buildXlsx(R),R.nome+".xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     else entregar(buildPdf(R),R.nome+".pdf","application/pdf")
   }catch(e){m.style.color="var(--ng)";m.textContent="Não foi possível gerar o arquivo: "+((e&&e.message)||"erro")}}
-$("xx").onclick=()=>exportar("x");
-$("xp").onclick=()=>exportar("p");
-$("pk").onchange=()=>setCamp($("pk").value);
-$("kl").onclick=e=>{const r=e.target.closest(".kr");if(r)setCamp(r.dataset.k===fC?"":r.dataset.k)};
-$("pc").onclick=e=>{const b=e.target.closest("button");if(b)setPeriod(b.dataset.a,b.dataset.b)};
-$("pf").onchange=()=>{const v=$("pf").value;setPeriod(v,fT&&v>fT?v:fT)};
-$("pt").onchange=()=>{const v=$("pt").value;setPeriod(fF&&v&&v<fF?v:fF,v)};
-$("pd").onchange=()=>{const v=$("pd").value;if(v)setPeriod(v,v)};
 
 $("be").onclick=async()=>{
   const t=JSON.stringify(S,null,2);$("bk").value=t;
@@ -535,14 +510,15 @@ function parseImport(raw){
     parts.forEach(x=>{if(!ids.has(x))throw new Error(n+"participante \""+x+"\" não está na lista de jogadores.")});
     const winner=String(r.winner==null?"":r.winner);
     if(!parts.includes(winner))throw new Error(n+"o vencedor precisa estar entre os participantes.");
-    return{id:String(r.id),date,camp:String(r.camp==null?"":r.camp).trim(),entry,winner,parts}});
-  return{players,rounds}}
+    return{id:String(r.id),date,camp:String(r.camp==null?"":r.camp).trim()||("Campeonato do dia "+fd(date)),entry,winner,parts}});
+  const champs=(Array.isArray(d.champs)?d.champs:[]).filter(c=>c&&c.name&&ids.has(String(c.champion))&&ids.has(String(c.vice))).map(c=>({name:String(c.name),closed:true,champion:String(c.champion),vice:String(c.vice)}));
+  return{players,rounds,champs}}
 function doImport(text){
   const bm=$("bm");
   try{
     const d=parseImport(text);
     if(!confirm("Importar "+d.players.length+" jogadores e "+d.rounds.length+" rodadas? Isso substitui todos os dados deste aparelho."))return;
-    S=d;fF="";fT="";fC="";campSel=null;renC=null;save();sel=new Set();win="";edit=null;renderForm();hist();players();
+    S=norm(d);fF="";fT="";fC="";campSel=null;renC=null;save();sel=new Set();win="";edit=null;renderForm();hist();players();
     bm.style.color="var(--ok)";bm.textContent="Importado: "+S.players.length+" jogadores e "+S.rounds.length+" rodadas."
   }catch(e){bm.style.color="var(--ng)";bm.textContent=(e&&e.message)||"Texto inválido."}}
 $("bi").onclick=()=>doImport($("bk").value);
@@ -561,10 +537,10 @@ $("lc").onclick=()=>{$("login").classList.add("hide");$("vlink").classList.remov
 $("lg").onclick=()=>{
   if($("cd").value.trim()!==CODE){$("lm").textContent="Código incorreto.";return}
   isAdm=true;try{sessionStorage.setItem("adm","1")}catch(e){}
-  S=loadDraft()||clone(SEED);sel=new Set();win="";$("cd").value="";$("lm").textContent="";renderForm();hist();players();applyMode();
+  S=norm(loadDraft()||clone(SEED));sel=new Set();win="";$("cd").value="";$("lm").textContent="";renderForm();hist();players();applyMode();
 };
 $("cd").onkeydown=e=>{if(e.key==="Enter")$("lg").click()};
-$("out").onclick=()=>{isAdm=false;try{sessionStorage.removeItem("adm")}catch(e){}endEdit();sel=new Set();win="";S=clone(SEED);renderForm();hist();players();applyMode()};
+$("out").onclick=()=>{isAdm=false;try{sessionStorage.removeItem("adm")}catch(e){}endEdit();sel=new Set();win="";S=norm(clone(SEED));renderForm();hist();players();applyMode()};
 $("pub").onclick=async()=>{
   const m=$("pm");m.style.color="var(--mu)";m.textContent="Publicando...";
   try{
