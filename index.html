@@ -151,7 +151,15 @@ let SEED={players:[],rounds:[]};
 try{SEED=JSON.parse(document.getElementById("seed").textContent)}catch(e){}
 let isAdm=false;
 try{isAdm=sessionStorage.getItem("adm")==="1"}catch(e){}
-const loadDraft=()=>{try{const x=localStorage.getItem(KEY);if(x)return JSON.parse(x)}catch(e){}return null};
+const sigOf=o=>{const s=JSON.stringify(o);let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return String(h)};
+const preSel=()=>{const l=[...S.rounds].reverse().find(r=>!isC(cn(r)));sel=new Set(l?l.parts.filter(id=>S.players.some(p=>p.id===id)):[])};
+const loadDraft=()=>{try{const x=localStorage.getItem(KEY);if(x){const d=norm(JSON.parse(x)),sg=sigOf(SEED);
+  if(localStorage.getItem(KEY+"_sig")!==sg){
+    const mp={};SEED.players.forEach(p=>{const q=d.players.find(q=>q.id===p.id)||d.players.find(q=>q.name.toLowerCase()===p.name.toLowerCase());if(q)mp[p.id]=q.id;else{d.players.push(clone(p));mp[p.id]=p.id}});
+    SEED.rounds.forEach(r=>{if(!d.rounds.some(q=>q.id===r.id)){const c=clone(r);c.winner=mp[c.winner]||c.winner;c.parts=c.parts.map(i=>mp[i]||i);d.rounds.push(c)}});
+    SEED.champs.forEach(c=>{if(!d.champs.some(q=>q.name===c.name)){d.champs.push({name:c.name,closed:true,champion:mp[c.champion]||c.champion,vice:mp[c.vice]||c.vice})}});
+    localStorage.setItem(KEY,JSON.stringify(d));localStorage.setItem(KEY+"_sig",sg)}
+  return d}}catch(e){}return null};
 norm(SEED);S=norm(isAdm?(loadDraft()||clone(SEED)):clone(SEED));
 function pstat(){if(!isAdm)return;const d=JSON.stringify(S)!==JSON.stringify(SEED);$("pst").textContent=d?"Há alterações não publicadas para os visitantes.":"O ranking publicado está atualizado.";$("pub").disabled=!d}
 function applyMode(){
@@ -165,7 +173,7 @@ function buildDoc(j){
   return '<!DOCTYPE html><html lang="pt-BR"><head>'+g("meta[charset]")+g("meta[name=viewport]")+g("title")+g("#app-css")+'</head><body>'+MAIN0+NAV0+'<scr'+'ipt id="seed" type="application/json">'+j+'</scr'+'ipt><scr'+'ipt id="app-js">'+document.getElementById("app-js").textContent+'</scr'+'ipt></body></html>';
 }
 const $=id=>document.getElementById(id);
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}pstat()};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KEY+"_sig",sigOf(SEED))}catch(e){}pstat()};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -210,7 +218,7 @@ $("rs").onclick=()=>{
   if(isC(cname))return m.textContent="Esse campeonato está encerrado. Reabra-o na aba Campeonatos para registrar rodadas.";
   const nr={id:edit||uid(),date:d,camp:cname,entry:e,winner:win,parts:[...sel]};const ix=edit?S.rounds.findIndex(r=>r.id===edit):-1;if(ix>=0)S.rounds[ix]=nr;else S.rounds.push(nr);save();endEdit();
   campSel=cname;$("rcnew").value="";
-  sel=new Set();win="";$("re").value=DEF;m.textContent="";renderForm();hist();
+  win="";m.textContent="";renderForm();hist();
 };
 function endEdit(){edit=null;$("rt").textContent="Nova rodada";$("rs").textContent="Salvar rodada";$("rc").classList.add("hide");$("rd").value=new Date().toISOString().slice(0,10)}
 function startEdit(id){
@@ -531,13 +539,13 @@ $("bf").onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
   fr.readAsText(f)};
 
 $("rd").value=new Date().toISOString().slice(0,10);
-renderForm();hist();players();
+preSel();renderForm();hist();players();
 $("vl").onclick=()=>{$("login").classList.remove("hide");$("vlink").classList.add("hide");$("cd").focus()};
 $("lc").onclick=()=>{$("login").classList.add("hide");$("vlink").classList.remove("hide");$("cd").value="";$("lm").textContent=""};
 $("lg").onclick=()=>{
   if($("cd").value.trim()!==CODE){$("lm").textContent="Código incorreto.";return}
   isAdm=true;try{sessionStorage.setItem("adm","1")}catch(e){}
-  S=norm(loadDraft()||clone(SEED));sel=new Set();win="";$("cd").value="";$("lm").textContent="";renderForm();hist();players();applyMode();
+  S=norm(loadDraft()||clone(SEED));preSel();win="";$("cd").value="";$("lm").textContent="";renderForm();hist();players();applyMode();
 };
 $("cd").onkeydown=e=>{if(e.key==="Enter")$("lg").click()};
 $("out").onclick=()=>{isAdm=false;try{sessionStorage.removeItem("adm")}catch(e){}endEdit();sel=new Set();win="";S=norm(clone(SEED));renderForm();hist();players();applyMode()};
